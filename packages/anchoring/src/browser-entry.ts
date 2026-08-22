@@ -27,10 +27,21 @@ function postToParent(message: unknown): void {
 // regardless of what the page's own handlers do afterward. Confirmed via a
 // real click on a WordPress nav-toggle icon during benchmarking: the click
 // silently vanished with a bubble-phase listener.
+//
+// preventDefault + stopPropagation are equally load-bearing, not just capture:
+// the review view is supposed to freeze the page for annotation only (PRD
+// §8.5 — clicking anywhere opens a comment, nothing else). Without these, a
+// click on a linked heading (extremely common: post titles link to the full
+// post) still navigates the iframe away after we've already computed an
+// anchor against the page that's about to disappear — confirmed on a real
+// blog where the stored selector matched zero elements moments later because
+// the iframe had already navigated to the linked article.
 window.addEventListener(
   "click",
   (e: MouseEvent) => {
     if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
     const anchor = computeDomAnchor(e.clientX, e.clientY, document);
     postToParent({
       type: "easymarker:pin-candidate",
