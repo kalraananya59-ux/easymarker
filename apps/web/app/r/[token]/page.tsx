@@ -17,6 +17,7 @@ async function loadComments(projectId: string) {
 
   return rows.map((c) => ({
     id: c.id,
+    reviewerId: c.reviewerId,
     reviewerName: c.reviewerName,
     body: c.body,
     status: c.status,

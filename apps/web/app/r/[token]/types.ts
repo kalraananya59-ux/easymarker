@@ -8,6 +8,7 @@ export interface ReplyData {
 
 export interface CommentData {
   id: string;
+  reviewerId: string | null;
   reviewerName: string;
   body: string;
   status: "open" | "in_progress" | "resolved";

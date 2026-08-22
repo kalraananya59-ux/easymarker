@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 import { db, comments, projects, eq, and } from "@easymarker/db";
+import { authOptions } from "@/lib/auth";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -75,10 +77,14 @@ export async function POST(request: Request) {
     );
   }
 
+  const session = await getServerSession(authOptions);
+  const reviewerId = session?.user.workspaceId === project.workspaceId ? session.user.id : null;
+
   const [comment] = await db
     .insert(comments)
     .values({
       projectId,
+      reviewerId,
       reviewerName,
       reviewerEmail: reviewerEmail || null,
       anchor,
