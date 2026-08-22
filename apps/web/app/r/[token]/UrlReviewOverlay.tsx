@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { NamePrompt } from "./NamePrompt";
 import { CommentSidebar } from "./CommentSidebar";
-import { readGuestIdentity, writeGuestIdentity } from "@/lib/guest-client";
+import { readGuestIdentity, writeGuestIdentity, type GuestIdentity } from "@/lib/guest-client";
 import type { CommentData } from "./types";
 
 interface AnchorPayload {
@@ -57,8 +57,19 @@ export function UrlReviewOverlay({
   const [draftText, setDraftText] = useState("");
   const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [guestIdentity, setGuestIdentity] = useState<GuestIdentity | null>(null);
 
   const handshakeAcked = useRef(false);
+
+  useEffect(() => {
+    if (!isOwner) setGuestIdentity(readGuestIdentity());
+  }, [isOwner]);
+
+  function saveGuestIdentity(name: string, email: string) {
+    const identity: GuestIdentity = email ? { name, email } : { name };
+    writeGuestIdentity(identity);
+    setGuestIdentity(identity);
+  }
 
   function requestResolve() {
     iframeRef.current?.contentWindow?.postMessage(
@@ -110,7 +121,7 @@ export function UrlReviewOverlay({
         if (!rect) return;
         setActiveCommentId(null);
         setPendingPin({ anchor, x: rect.left + viewportX, y: rect.top + viewportY });
-        if (!isOwner && !readGuestIdentity()) setShowNamePrompt(true);
+        if (!isOwner && !guestIdentity) setShowNamePrompt(true);
         return;
       }
 
@@ -138,7 +149,7 @@ export function UrlReviewOverlay({
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [comments, proxyOrigin, isOwner]);
+  }, [comments, proxyOrigin, isOwner, guestIdentity]);
 
   useEffect(() => {
     function handleResize() {
@@ -151,7 +162,7 @@ export function UrlReviewOverlay({
 
   async function submitComment() {
     if (!pendingPin || !draftText.trim()) return;
-    const identity = isOwner ? { name: "You" } : readGuestIdentity();
+    const identity = isOwner ? { name: "You" } : guestIdentity;
     if (!identity) {
       setShowNamePrompt(true);
       return;
@@ -184,7 +195,7 @@ export function UrlReviewOverlay({
   }
 
   async function handleReply(commentId: string, body: string) {
-    const identity = isOwner ? { name: "You" } : readGuestIdentity();
+    const identity = isOwner ? { name: "You" } : guestIdentity;
     const res = await fetch(`/api/comments/${commentId}/replies`, {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -288,13 +299,17 @@ export function UrlReviewOverlay({
           isOwner={isOwner}
           onReply={handleReply}
           onStatusChange={handleStatusChange}
+          guestIdentity={guestIdentity}
+          onEditIdentity={() => setShowNamePrompt(true)}
         />
       </div>
 
       {showNamePrompt && (
         <NamePrompt
+          initialName={guestIdentity?.name}
+          initialEmail={guestIdentity?.email}
           onSubmit={(name, email) => {
-            writeGuestIdentity(email ? { name, email } : { name });
+            saveGuestIdentity(name, email);
             setShowNamePrompt(false);
           }}
           onCancel={() => {

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { CommentData } from "./types";
+import type { GuestIdentity } from "@/lib/guest-client";
 import styles from "./CommentSidebar.module.css";
 
 const STATUS_LABELS: Record<CommentData["status"], string> = {
@@ -48,6 +49,8 @@ interface CommentSidebarProps {
   isOwner: boolean;
   onReply: (commentId: string, body: string) => Promise<void>;
   onStatusChange: (commentId: string, status: CommentData["status"]) => Promise<void>;
+  guestIdentity?: GuestIdentity | null;
+  onEditIdentity?: () => void;
 }
 
 export function CommentSidebar({
@@ -57,6 +60,8 @@ export function CommentSidebar({
   isOwner,
   onReply,
   onStatusChange,
+  guestIdentity,
+  onEditIdentity,
 }: CommentSidebarProps) {
   const [showResolved, setShowResolved] = useState(false);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
@@ -81,6 +86,15 @@ export function CommentSidebar({
           Show resolved
         </label>
       </div>
+
+      {!isOwner && guestIdentity && onEditIdentity && (
+        <div className={styles.identityBar}>
+          Commenting as <strong>{guestIdentity.name}</strong>
+          <button type="button" className={styles.identityEdit} onClick={onEditIdentity}>
+            Edit
+          </button>
+        </div>
+      )}
 
       <div className={styles.list}>
         {visible.length === 0 && (

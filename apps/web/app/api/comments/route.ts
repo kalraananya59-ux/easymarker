@@ -33,18 +33,12 @@ export async function POST(request: Request) {
   const text = typeof body?.body === "string" ? body.body.trim() : "";
   const positionX = typeof body?.positionX === "number" ? body.positionX : null;
   const positionY = typeof body?.positionY === "number" ? body.positionY : null;
-  const reviewerName = typeof body?.reviewerName === "string" ? body.reviewerName.trim() : "";
+  const clientReviewerName = typeof body?.reviewerName === "string" ? body.reviewerName.trim() : "";
   const reviewerEmail = typeof body?.reviewerEmail === "string" ? body.reviewerEmail.trim() : null;
 
   if (!projectId) {
     return NextResponse.json(
       { error: { code: "MISSING_PROJECT_ID", message: "projectId is required." } },
-      { status: 400 }
-    );
-  }
-  if (!reviewerName) {
-    return NextResponse.json(
-      { error: { code: "MISSING_NAME", message: "A name is required to leave a comment." } },
       { status: 400 }
     );
   }
@@ -78,7 +72,20 @@ export async function POST(request: Request) {
   }
 
   const session = await getServerSession(authOptions);
-  const reviewerId = session?.user.workspaceId === project.workspaceId ? session.user.id : null;
+  const isOwner = session?.user.workspaceId === project.workspaceId;
+  const reviewerId = isOwner ? session!.user.id : null;
+  // The owner's display name always comes from their real account name, never
+  // from client input — matches how replies already work (authorName is
+  // session-derived for the owner) and closes a labeling inconsistency where
+  // top-level comments showed the literal string "You" instead.
+  const reviewerName = isOwner ? session!.user.name : clientReviewerName;
+
+  if (!reviewerName) {
+    return NextResponse.json(
+      { error: { code: "MISSING_NAME", message: "A name is required to leave a comment." } },
+      { status: 400 }
+    );
+  }
 
   const [comment] = await db
     .insert(comments)

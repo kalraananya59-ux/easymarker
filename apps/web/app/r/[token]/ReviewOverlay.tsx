@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NamePrompt } from "./NamePrompt";
 import { CommentSidebar } from "./CommentSidebar";
-import { readGuestIdentity, writeGuestIdentity } from "@/lib/guest-client";
+import { readGuestIdentity, writeGuestIdentity, type GuestIdentity } from "@/lib/guest-client";
 import type { CommentData } from "./types";
 
 interface PendingPin {
@@ -31,6 +31,17 @@ export function ReviewOverlay({
   const [draftText, setDraftText] = useState("");
   const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [guestIdentity, setGuestIdentity] = useState<GuestIdentity | null>(null);
+
+  useEffect(() => {
+    if (!isOwner) setGuestIdentity(readGuestIdentity());
+  }, [isOwner]);
+
+  function saveGuestIdentity(name: string, email: string) {
+    const identity: GuestIdentity = email ? { name, email } : { name };
+    writeGuestIdentity(identity);
+    setGuestIdentity(identity);
+  }
 
   function handleContainerClick(e: React.MouseEvent<HTMLDivElement>) {
     if (e.target !== e.currentTarget && !(e.target as HTMLElement).matches("img")) return;
@@ -41,14 +52,14 @@ export function ReviewOverlay({
     setActiveCommentId(null);
     setPendingPin({ xPct, yPct });
 
-    if (!isOwner && !readGuestIdentity()) {
+    if (!isOwner && !guestIdentity) {
       setShowNamePrompt(true);
     }
   }
 
   async function submitComment() {
     if (!pendingPin || !draftText.trim()) return;
-    const identity = isOwner ? { name: "You" } : readGuestIdentity();
+    const identity = isOwner ? { name: "You" } : guestIdentity;
     if (!identity) {
       setShowNamePrompt(true);
       return;
@@ -81,7 +92,7 @@ export function ReviewOverlay({
   }
 
   async function handleReply(commentId: string, body: string) {
-    const identity = isOwner ? { name: "You" } : readGuestIdentity();
+    const identity = isOwner ? { name: "You" } : guestIdentity;
     const res = await fetch(`/api/comments/${commentId}/replies`, {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -182,13 +193,17 @@ export function ReviewOverlay({
           isOwner={isOwner}
           onReply={handleReply}
           onStatusChange={handleStatusChange}
+          guestIdentity={guestIdentity}
+          onEditIdentity={() => setShowNamePrompt(true)}
         />
       </div>
 
       {showNamePrompt && (
         <NamePrompt
+          initialName={guestIdentity?.name}
+          initialEmail={guestIdentity?.email}
           onSubmit={(name, email) => {
-            writeGuestIdentity(email ? { name, email } : { name });
+            saveGuestIdentity(name, email);
             setShowNamePrompt(false);
           }}
           onCancel={() => {

@@ -2,9 +2,19 @@
 
 import { useState } from "react";
 
-export function NamePrompt({ onSubmit, onCancel }: { onSubmit: (name: string, email: string) => void; onCancel: () => void }) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+export function NamePrompt({
+  initialName = "",
+  initialEmail = "",
+  onSubmit,
+  onCancel,
+}: {
+  initialName?: string | undefined;
+  initialEmail?: string | undefined;
+  onSubmit: (name: string, email: string) => void;
+  onCancel: () => void;
+}) {
+  const [name, setName] = useState(initialName);
+  const [email, setEmail] = useState(initialEmail);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -27,7 +37,7 @@ export function NamePrompt({ onSubmit, onCancel }: { onSubmit: (name: string, em
     >
       <div role="dialog" aria-modal="true" style={{ background: "white", borderRadius: 8, padding: 24, width: 320 }}>
         <form onSubmit={handleSubmit}>
-          <p>What&apos;s your name?</p>
+          <p>{initialName ? "Update your name" : "What's your name?"}</p>
           <input
             type="text"
             placeholder="Your name"
