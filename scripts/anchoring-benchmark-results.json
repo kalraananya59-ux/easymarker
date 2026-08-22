@@ -1,0 +1,70 @@
+{
+  "summary": {
+    "totalUrls": 6,
+    "proxyRenderSuccess": {
+      "count": 5,
+      "total": 6,
+      "pct": 83.33333333333334
+    },
+    "sameContentRecovery": {
+      "count": 1,
+      "total": 1,
+      "pct": 100
+    },
+    "degradedRecovery": {
+      "count": 1,
+      "total": 1,
+      "pct": 100
+    }
+  },
+  "results": [
+    {
+      "url": "https://www.bbc.com",
+      "category": "news",
+      "proxyOk": true,
+      "sameContentRecovered": null,
+      "degradedRecovered": null,
+      "error": "pin did not render after creation"
+    },
+    {
+      "url": "https://www.npr.org",
+      "category": "news",
+      "proxyOk": true,
+      "sameContentRecovered": null,
+      "degradedRecovered": null,
+      "error": "no compose box appeared after click"
+    },
+    {
+      "url": "https://www.joelonsoftware.com",
+      "category": "blog",
+      "proxyOk": true,
+      "sameContentRecovered": null,
+      "degradedRecovered": null,
+      "error": "no compose box appeared after click"
+    },
+    {
+      "url": "https://www.who.int",
+      "category": "org",
+      "proxyOk": true,
+      "sameContentRecovered": true,
+      "degradedRecovered": true,
+      "error": null
+    },
+    {
+      "url": "https://www.nasa.gov",
+      "category": "org",
+      "proxyOk": false,
+      "sameContentRecovered": null,
+      "degradedRecovered": null,
+      "error": "page.goto: Timeout 25000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/r/f2HDExkeY4cH10aft6KNCA\", waiting until \"load\"\u001b[22m\n"
+    },
+    {
+      "url": "https://stackoverflow.com",
+      "category": "saas-heavy",
+      "proxyOk": true,
+      "sameContentRecovered": null,
+      "degradedRecovered": null,
+      "error": "no compose box appeared after click"
+    }
+  ]
+}

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Easymarker — UI Design Document v1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────────
+   DESIGN TOKENS
+───────────────────────────────────────────── */
+:root {
+  /* Color Palette */
+  --navy-950:   #0B0F1A;
+  --navy-900:   #111827;
+  --navy-800:   #1E2A3A;
+  --navy-700:   #2C3E55;
+  --navy-600:   #3D5166;
+  --navy-500:   #536478;
+
+  --blue-500:   #2563EB;
+  --blue-400:   #3B82F6;
+  --blue-300:   #60A5FA;
+  --blue-100:   #DBEAFE;
+  --blue-50:    #EFF6FF;
+
+  --slate-200:  #E2E8F0;
+  --slate-100:  #F1F5F9;
+  --slate-50:   #F8FAFC;
+
+  --green-500:  #059669;
+  --green-100:  #D1FAE5;
+  --green-50:   #ECFDF5;
+
+  --amber-500:  #D97706;
+  --amber-100:  #FEF3C7;
+
+  --red-500:    #DC2626;
+  --red-100:    #FEE2E2;
+  --red-50:     #FEF2F2;
+
+  --white:      #FFFFFF;
+  --text-primary:   #0F172A;
+  --text-secondary: #475569;
+  --text-muted:     #94A3B8;
+
+  /* Typography */
+  --font-ui:      'Inter', -apple-system, sans-serif;
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-mono:    'JetBrains Mono', 'Courier New', monospace;
+
+  /* Spacing (8px grid) */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Border radius */
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --radius-xl:  16px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-xs:  0 1px 2px rgba(15,23,42,0.05);
+  --shadow-sm:  0 1px 3px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04);
+  --shadow-md:  0 4px 6px rgba(15,23,42,0.06), 0 2px 4px rgba(15,23,42,0.04);
+  --shadow-lg:  0 10px 15px rgba(15,23,42,0.08), 0 4px 6px rgba(15,23,42,0.04);
+  --shadow-xl:  0 20px 25px rgba(15,23,42,0.10), 0 8px 10px rgba(15,23,42,0.05);
+
+  /* Transitions */
+  --transition-fast:   100ms ease;
+  --transition-base:   150ms ease;
+  --transition-smooth: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─────────────────────────────────────────────
+   DOCUMENT STRUCTURE
+───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background: var(--white);
+  -webkit-font-smoothing: antialiased;
+}
+
+.doc-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar nav */
+.doc-nav {
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--navy-950);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  padding: var(--space-6) 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--navy-700) transparent;
+}
+
+.doc-nav-logo {
+  padding: 0 var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--navy-800);
+  margin-bottom: var(--space-4);
+}
+
+.doc-nav-logo .logo-mark {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--white);
+  letter-spacing: -0.01em;
+}
+
+.doc-nav-logo .logo-pin {
+  width: 28px; height: 28px;
+  background: var(--blue-400);
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+
+.doc-nav-logo .doc-meta {
+  font-size: 11px;
+  color: var(--navy-500);
+  margin-top: var(--space-1);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.nav-section-label {
+  padding: var(--space-3) var(--space-5) var(--space-1);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--navy-500);
+}
+
+.doc-nav a {
+  display: block;
+  padding: var(--space-1) var(--space-5);
+  font-size: 13px;
+  color: var(--navy-600);
+  text-decoration: none;
+  transition: color var(--transition-fast), background var(--transition-fast);
+  border-left: 2px solid transparent;
+  line-height: 1.8;
+}
+
+.doc-nav a:hover {
+  color: var(--white);
+  background: var(--navy-900);
+}
+
+.doc-nav a.active {
+  color: var(--blue-300);
+  border-left-color: var(--blue-400);
+  background: rgba(37, 99, 235, 0.08);
+}
+
+/* Main content */
+.doc-content {
+  flex: 1;
+  min-width: 0;
+  max-width: 960px;
+  padding: var(--space-10) var(--space-12);
+}
+
+/* ─────────────────────────────────────────────
+   TYPOGRAPHY
+───────────────────────────────────────────── */
+.doc-title {
+  font-family: var(--font-display);
+  font-size: 42px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--navy-950);
+  margin-bottom: var(--space-3);
+}
+
+.doc-subtitle {
+  font-size: 17px;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-8);
+  line-height: 1.5;
+}
+
+h1 {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--navy-950);
+  margin: var(--space-12) 0 var(--space-4);
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--slate-200);
+}
+
+h1:first-of-type { border-top: none; margin-top: 0; padding-top: 0; }
+
+h2 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--navy-900);
+  margin: var(--space-10) 0 var(--space-3);
+}
+
+h3 {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: var(--space-8) 0 var(--space-3);
+}
+
+p { margin-bottom: var(--space-4); color: var(--text-secondary); line-height: 1.7; }
+
+strong { color: var(--text-primary); font-weight: 600; }
+
+code {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  background: var(--slate-100);
+  color: var(--blue-500);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--slate-200);
+}
+
+/* ─────────────────────────────────────────────
+   UTILITY COMPONENTS
+───────────────────────────────────────────── */
+.section-intro {
+  background: var(--blue-50);
+  border: 1px solid var(--blue-100);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6);
+  margin-bottom: var(--space-8);
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.section-intro strong { color: var(--blue-500); }
+
+.token-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin: var(--space-4) 0 var(--space-8);
+}
+
+.token-table th {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--slate-50);
+  border-bottom: 1px solid var(--slate-200);
+}
+
+.token-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--slate-100);
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+
+.token-table tr:last-child td { border-bottom: none; }
+.token-table .token-name { font-family: var(--font-mono); font-size: 12px; color: var(--blue-500); }
+.token-table .token-value { font-family: var(--font-mono); font-size: 12px; }
+
+.color-swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.swatch {
+  width: 20px; height: 20px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(0,0,0,0.08);
+  flex-shrink: 0;
+}
+
+/* Wireframe wrapper */
+.wireframe {
+  background: var(--slate-50);
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  margin: var(--space-6) 0 var(--space-8);
+  position: relative;
+}
+
+.wireframe-label {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--white);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--slate-200);
+  z-index: 10;
+}
+
+/* Page mock shell */
+.mock-browser {
+  background: var(--slate-200);
+  padding: var(--space-2) var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mock-dots { display: flex; gap: 5px; }
+.mock-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+}
+.mock-dot:nth-child(1) { background: #FC615D; }
+.mock-dot:nth-child(2) { background: #FDBC40; }
+.mock-dot:nth-child(3) { background: #34C749; }
+
+.mock-url-bar {
+  flex: 1;
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 3px 10px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+/* ─────────────────────────────────────────────
+   MOCK UI ELEMENTS
+───────────────────────────────────────────── */
+
+/* === BUTTONS === */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 9px 18px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-smooth);
+  border: none;
+  text-decoration: none;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--blue-500);
+  color: var(--white);
+  box-shadow: 0 1px 2px rgba(37,99,235,0.25);
+}
+.btn-primary:hover { background: var(--blue-400); transform: translateY(-1px); box-shadow: 0 3px 8px rgba(37,99,235,0.3); }
+
+.btn-secondary {
+  background: var(--white);
+  color: var(--text-primary);
+  border: 1px solid var(--slate-200);
+  box-shadow: var(--shadow-xs);
+}
+.btn-secondary:hover { background: var(--slate-50); border-color: var(--slate-200); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+}
+.btn-ghost:hover { background: var(--slate-100); color: var(--text-primary); }
+
+.btn-danger {
+  background: var(--red-500);
+  color: var(--white);
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.btn-lg {
+  padding: 14px 28px;
+  font-size: 16px;
+  border-radius: var(--radius-lg);
+}
+
+.btn-icon {
+  width: 36px; height: 36px;
+  padding: 0;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>
+</head>
+<body>
+<!-- NOTE: This file preserves only the portion of the "Easymarker UI Design Document v1.0"
+     received before it hit a 50,000-character message truncation limit. Content stops
+     partway through section 2.1 Buttons. Sections 1 (Design System: color, type, spacing,
+     effects) are complete. Section 2 (Components) is partial — Buttons only.
+     Missing: rest of Components (Inputs, Cards, Pins, Badges, Modals, Nav, Misc),
+     all of Pages (Landing, Auth, Onboarding, Dashboard, New Project, Review View,
+     Share, Settings, Billing, 404), and all of Patterns (Owner/Guest Journey,
+     Responsive, Interactions, Accessibility). -->
+<p>See conversation for full nav structure — this file is a partial capture pending the rest of the source document.</p>
+</body>
+</html>

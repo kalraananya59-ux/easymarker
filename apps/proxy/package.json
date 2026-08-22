@@ -1,0 +1,27 @@
+{
+  "name": "@easymarker/proxy",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "dotenv -e ../../.env.local -- tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@easymarker/anchoring": "workspace:*",
+    "@easymarker/shared": "workspace:*",
+    "express": "^4.21.1",
+    "express-rate-limit": "^7.4.1",
+    "cheerio": "^1.0.0",
+    "esbuild": "^0.24.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.9.0",
+    "dotenv-cli": "^7.4.4",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}
