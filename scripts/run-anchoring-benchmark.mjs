@@ -10,6 +10,61 @@ const corpus = JSON.parse(readFileSync(path.join(__dirname, "anchoring-corpus.js
 const BASE = "http://localhost:3000";
 const PER_SITE_TIMEOUT_MS = 25000;
 
+const COOKIE_BANNER_PATTERNS = [
+  /^accept all( cookies)?$/i,
+  /^accept cookies$/i,
+  /^i accept$/i,
+  /^yes,?\s*i accept$/i,
+  /^allow all$/i,
+  /^allow all cookies$/i,
+  /^agree$/i,
+  /^i agree$/i,
+  /^got it$/i,
+  /^ok(ay)?$/i,
+  /^accept$/i,
+];
+
+async function tryDismissIn(frame) {
+  for (const pattern of COOKIE_BANNER_PATTERNS) {
+    try {
+      const byRole = frame.getByRole("button", { name: pattern }).first();
+      if (await byRole.isVisible({ timeout: 300 })) {
+        await byRole.click({ timeout: 1000 });
+        return true;
+      }
+    } catch {
+      /* try next */
+    }
+    try {
+      // Many consent-management platforms (OneTrust, Sourcepoint, etc.) render
+      // their buttons as plain divs/spans with no button role at all — match on
+      // visible text instead of semantics as a second pass.
+      const byText = frame.getByText(pattern, { exact: true }).first();
+      if (await byText.isVisible({ timeout: 300 })) {
+        await byText.click({ timeout: 1000 });
+        return true;
+      }
+    } catch {
+      /* try next */
+    }
+  }
+  return false;
+}
+
+async function dismissCookieBanner(frame) {
+  // Consent banners are frequently injected by the target site's own client-side
+  // script as a genuinely separate, cross-origin nested iframe (e.g. Sourcepoint's
+  // cdn.privacy-mgmt.com) — not part of the proxied document at all. A real click
+  // there would never reach our anchoring listener (different document, no bubbling
+  // across the frame boundary), so this must search nested frames too, not just
+  // the top-level proxied page.
+  if (await tryDismissIn(frame)) return true;
+  for (const child of frame.childFrames()) {
+    if (await tryDismissIn(child)) return true;
+  }
+  return false;
+}
+
 const limitArg = process.argv.find((a) => a.startsWith("--limit="));
 const limit = limitArg ? parseInt(limitArg.split("=")[1], 10) : corpus.length;
 const onlyArg = process.argv.find((a) => a.startsWith("--only="));
@@ -27,6 +82,24 @@ await page.fill('input[type="password"]', "correcthorsebattery");
 await page.click('button[type="submit"]');
 await page.waitForURL(`${BASE}/dashboard`, { timeout: 15000 });
 
+// waitForURL resolving doesn't guarantee the session cookie is committed and
+// visible to context.request (a separate client from `page`) yet — confirmed
+// via intermittent 401s on the very first API call of a run. Verify directly
+// and retry briefly rather than trusting the navigation event alone.
+let sessionReady = false;
+for (let i = 0; i < 10; i++) {
+  const sessionResp = await context.request.get(`${BASE}/api/auth/session`);
+  const sessionBody = await sessionResp.json().catch(() => null);
+  if (sessionBody?.user?.workspaceId) {
+    sessionReady = true;
+    break;
+  }
+  await page.waitForTimeout(300);
+}
+if (!sessionReady) {
+  throw new Error("Sign-in did not produce a usable session after retrying — aborting.");
+}
+
 const results = [];
 
 async function testOneSite(entry) {
@@ -38,15 +111,21 @@ async function testOneSite(entry) {
     degradedRecovered: null,
     error: null,
   };
+  const t0 = Date.now();
+  const dbg = (label) => {
+    if (process.env.DEBUG_BENCHMARK) console.error(`DEBUG [${Date.now() - t0}ms] ${label}`);
+  };
 
   // Create the project via the API directly (shares the session cookie with the
   // browser context) rather than driving the dashboard form — this is what's
   // actually being benchmarked (proxy + anchoring), not the create-project UI,
   // and it sidesteps a class of UI/network-event timing races entirely.
+  dbg("starting project creation");
   const createResponse = await context.request.post(`${BASE}/api/projects`, {
     data: { url: entry.url },
     timeout: PER_SITE_TIMEOUT_MS,
   });
+  dbg("project creation response received");
   if (createResponse.status() !== 201) {
     result.error = `project creation failed (status ${createResponse.status()})`;
     return result;
@@ -60,8 +139,29 @@ async function testOneSite(entry) {
 
   const reviewPage = await context.newPage();
   try {
-    await reviewPage.goto(`${BASE}/r/${token}`, { timeout: PER_SITE_TIMEOUT_MS });
+    const renderResponsePromise = reviewPage
+      .waitForResponse((r) => r.url().includes(":4000/render?"), { timeout: PER_SITE_TIMEOUT_MS })
+      .catch(() => null);
+    // domcontentloaded, not the default "load": proxied pages can embed slow
+    // third-party widgets (Twitter embeds, ad iframes) whose own sub-resources
+    // may never finish — confirmed on joelonsoftware.com, whose actual content
+    // is ready in under a second but whose full "load" event can hang well
+    // past our timeout waiting on embedded platform.twitter.com iframes.
+    dbg("navigating to review page");
+    await reviewPage.goto(`${BASE}/r/${token}`, { timeout: PER_SITE_TIMEOUT_MS, waitUntil: "domcontentloaded" });
+    dbg("review page navigated (domcontentloaded)");
+    const renderResponse = await renderResponsePromise;
+    dbg("render response resolved");
     await reviewPage.waitForTimeout(1500);
+
+    // Check the proxy's actual HTTP status for the /render request rather than
+    // sniffing body text — a JSON error body (e.g. the target site returning 403
+    // to our proxy) easily clears a naive "body isn't empty" length check while
+    // still being a real, non-content proxy failure.
+    if (renderResponse && renderResponse.status() >= 400) {
+      result.error = `proxy /render returned ${renderResponse.status()}`;
+      return result;
+    }
 
     const iframeHandle = await reviewPage.waitForSelector("iframe", { timeout: 10000 });
     const frame = await iframeHandle.contentFrame();
@@ -77,6 +177,9 @@ async function testOneSite(entry) {
     }
     result.proxyOk = true;
 
+    await dismissCookieBanner(frame);
+    await reviewPage.waitForTimeout(300);
+
     let clickX;
     let clickY;
     try {
@@ -84,23 +187,38 @@ async function testOneSite(entry) {
       const candidates = frame.locator(entry.selectorHint);
       const count = Math.min(await candidates.count(), 10);
       for (let i = 0; i < count; i++) {
-        const box = await candidates.nth(i).boundingBox().catch(() => null);
+        const el = candidates.nth(i);
+        const box = await el.boundingBox().catch(() => null);
         // Reject elements with no size, or positioned off-screen (a common
         // accessibility pattern for "skip to content" links: not display:none,
         // so Playwright's default visibility check passes, but not clickable
         // on-screen either — this is exactly what was silently breaking ~40%
         // of sites in the first benchmark run before this fix).
         if (
-          box &&
-          box.width > 2 &&
-          box.height > 2 &&
-          box.x >= 0 &&
-          box.y >= 0 &&
-          box.x < iframeBoxForCheck.width &&
-          box.y < iframeBoxForCheck.height
+          !box ||
+          box.width <= 2 ||
+          box.height <= 2 ||
+          box.x < 0 ||
+          box.y < 0 ||
+          box.x >= iframeBoxForCheck.width ||
+          box.y >= iframeBoxForCheck.height
         ) {
-          clickX = box.x + box.width / 2;
-          clickY = box.y + Math.min(box.height / 2, 20);
+          continue;
+        }
+        const cx = box.x + box.width / 2;
+        const cy = box.y + Math.min(box.height / 2, 20);
+        // Verify this point actually hits the candidate (or a descendant of it),
+        // not an unrelated overlay sitting on top of it — e.g. a cookie-consent
+        // banner or sticky header the text-pattern dismissal above didn't catch.
+        const hitsCandidate = await el
+          .evaluate((node, [px, py]) => {
+            const top = document.elementFromPoint(px, py);
+            return !!top && (top === node || node.contains(top));
+          }, [cx, cy])
+          .catch(() => false);
+        if (hitsCandidate) {
+          clickX = cx;
+          clickY = cy;
           break;
         }
       }
@@ -113,18 +231,27 @@ async function testOneSite(entry) {
       clickY = iframeBox.y + iframeBox.height * 0.3;
     }
 
+    dbg(`clickX/Y computed: ${clickX}, ${clickY}`);
     await reviewPage.mouse.click(clickX, clickY);
+    dbg("mouse.click returned");
     await reviewPage.waitForTimeout(800);
+    dbg("post-click wait done");
     const textarea = await reviewPage.$("textarea");
+    dbg(`textarea found: ${!!textarea}`);
     if (!textarea) {
+      if (process.env.DEBUG_BENCHMARK) {
+        await reviewPage.screenshot({ path: "scripts/debug-site-after-click.png" });
+      }
       result.error = "no compose box appeared after click";
       return result;
     }
     await textarea.fill("benchmark");
     await reviewPage.locator('button:has-text("Comment")').first().click();
+    dbg("comment button clicked");
     await reviewPage.waitForTimeout(2000);
 
     const pinsAfterCreate = await reviewPage.$$('button[aria-label^="Comment by"]');
+    dbg(`pinsAfterCreate: ${pinsAfterCreate.length}`);
     const groundTruth = pinsAfterCreate.length === 1 ? await pinsAfterCreate[0].boundingBox() : null;
     if (!groundTruth) {
       result.error = "pin did not render after creation";
@@ -132,9 +259,13 @@ async function testOneSite(entry) {
     }
 
     // --- Same-content recovery: reload identical page ---
-    await reviewPage.reload({ timeout: PER_SITE_TIMEOUT_MS });
+    dbg("starting reload");
+    await reviewPage.reload({ timeout: PER_SITE_TIMEOUT_MS, waitUntil: "domcontentloaded" });
+    dbg("reload done");
     await reviewPage.waitForTimeout(2500);
+    dbg("post-reload wait done");
     const pinsAfterReload = await reviewPage.$$('button[aria-label^="Comment by"]');
+    dbg(`pinsAfterReload: ${pinsAfterReload.length}`);
     if (pinsAfterReload.length === 1) {
       const box = await pinsAfterReload[0].boundingBox();
       const dx = Math.abs(box.x - groundTruth.x);

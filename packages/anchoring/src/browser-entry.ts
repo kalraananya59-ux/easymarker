@@ -20,16 +20,27 @@ function postToParent(message: unknown): void {
   window.parent.postMessage(message, origin);
 }
 
-window.addEventListener("click", (e: MouseEvent) => {
-  if (e.button !== 0) return;
-  const anchor = computeDomAnchor(e.clientX, e.clientY, document);
-  postToParent({
-    type: "easymarker:pin-candidate",
-    anchor,
-    viewportX: e.clientX,
-    viewportY: e.clientY,
-  });
-});
+// Capture phase, not bubble: the target page's own scripts frequently call
+// stopPropagation() on interactive elements (menu toggles, dropdowns, etc.) —
+// a bubble-phase listener would never see those clicks at all. Capture fires
+// window-down before the event reaches the target, so this always sees it
+// regardless of what the page's own handlers do afterward. Confirmed via a
+// real click on a WordPress nav-toggle icon during benchmarking: the click
+// silently vanished with a bubble-phase listener.
+window.addEventListener(
+  "click",
+  (e: MouseEvent) => {
+    if (e.button !== 0) return;
+    const anchor = computeDomAnchor(e.clientX, e.clientY, document);
+    postToParent({
+      type: "easymarker:pin-candidate",
+      anchor,
+      viewportX: e.clientX,
+      viewportY: e.clientY,
+    });
+  },
+  true
+);
 
 window.addEventListener("resize", () => {
   postToParent({ type: "easymarker:viewport-changed" });
