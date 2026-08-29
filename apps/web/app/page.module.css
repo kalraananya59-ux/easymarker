@@ -1,0 +1,225 @@
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-8);
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.logo {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy-900);
+  text-decoration: none;
+}
+
+.navActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.navLink {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.navLink:hover {
+  color: var(--text-primary);
+}
+
+.hero {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-16) var(--space-8) var(--space-12);
+  text-align: center;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--blue-50);
+  color: var(--blue-500);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: var(--space-6);
+}
+
+.headline {
+  font-size: 44px;
+  line-height: 1.15;
+  font-weight: 700;
+  color: var(--navy-900);
+  margin: 0 0 var(--space-5);
+  letter-spacing: -0.02em;
+}
+
+.headline em {
+  font-style: normal;
+  color: var(--blue-500);
+}
+
+.subhead {
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-8);
+}
+
+.ctaRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.ctaHint {
+  margin-top: var(--space-4);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.previewWrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 var(--space-8) var(--space-16);
+}
+
+.preview {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--slate-100);
+  box-shadow: var(--shadow-lg);
+  background: var(--white);
+  padding: var(--space-6);
+}
+
+.previewChrome {
+  display: flex;
+  gap: 6px;
+  margin-bottom: var(--space-5);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  background: var(--slate-200);
+}
+
+.previewBody {
+  position: relative;
+  border-radius: var(--radius-md);
+  background: var(--slate-50);
+  height: 280px;
+  overflow: hidden;
+}
+
+.previewLine {
+  height: 10px;
+  border-radius: var(--radius-full);
+  background: var(--slate-200);
+  margin: var(--space-3) var(--space-6) 0;
+}
+
+.previewPin {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-radius: 50% 50% 50% 0;
+  transform: translate(-50%, -100%) rotate(-45deg);
+  background: var(--blue-500);
+  box-shadow: var(--shadow-md);
+}
+
+.previewCard {
+  position: absolute;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  width: 200px;
+  padding: var(--space-3);
+  background: var(--white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--slate-100);
+}
+
+.previewCardName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+}
+
+.previewCardText {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.features {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 var(--space-8) var(--space-16);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+}
+
+@media (max-width: 800px) {
+  .features {
+    grid-template-columns: 1fr;
+  }
+  .headline {
+    font-size: 32px;
+  }
+}
+
+.feature {
+  padding: var(--space-6);
+}
+
+.featureIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--blue-50);
+  color: var(--blue-500);
+  margin-bottom: var(--space-4);
+}
+
+.featureTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-2);
+}
+
+.featureText {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.footer {
+  border-top: 1px solid var(--slate-100);
+  padding: var(--space-6) var(--space-8);
+  text-align: center;
+}
+
+.footerText {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}

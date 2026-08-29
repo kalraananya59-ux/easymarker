@@ -6,6 +6,13 @@ export interface ReplyData {
   createdAt: string;
 }
 
+export interface StatusChangeData {
+  id: string;
+  status: "open" | "in_progress" | "resolved";
+  changedByName: string;
+  createdAt: string;
+}
+
 export interface CommentData {
   id: string;
   reviewerId: string | null;
@@ -16,4 +23,5 @@ export interface CommentData {
   positionY: number;
   createdAt: string;
   replies: ReplyData[];
+  statusChanges: StatusChangeData[];
 }

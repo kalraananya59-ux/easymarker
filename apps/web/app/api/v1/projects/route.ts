@@ -3,6 +3,7 @@ import { db, projects, eq, desc } from "@easymarker/db";
 import { checkUrlSubmission, generateShareToken } from "@easymarker/shared";
 import { getWorkspaceFromApiKey } from "@/lib/api-key";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { checkProjectLimit } from "@/lib/plan-limits";
 
 function unauthenticated() {
   return NextResponse.json(
@@ -50,6 +51,19 @@ export async function POST(request: Request) {
   const result = await checkUrlSubmission(url);
   if (!result.ok) {
     return NextResponse.json({ error: { code: result.code, message: result.message } }, { status: 400 });
+  }
+
+  const limitCheck = await checkProjectLimit(workspace.id);
+  if (!limitCheck.ok) {
+    return NextResponse.json(
+      {
+        error: {
+          code: "PLAN_LIMIT_REACHED",
+          message: `You've reached the ${limitCheck.limit}-project limit on the ${limitCheck.plan} plan. Upgrade to add more.`,
+        },
+      },
+      { status: 403 }
+    );
   }
 
   const [project] = await db

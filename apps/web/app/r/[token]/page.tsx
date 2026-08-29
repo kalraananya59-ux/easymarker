@@ -5,13 +5,17 @@ import { getSignedDownloadUrl } from "@/lib/storage";
 import { authOptions } from "@/lib/auth";
 import { ReviewOverlay } from "./ReviewOverlay";
 import { UrlReviewOverlay } from "./UrlReviewOverlay";
+import { PdfReviewOverlay } from "./PdfReviewOverlay";
 
 const PROXY_SERVICE_URL = process.env["PROXY_SERVICE_URL"] ?? "http://localhost:4000";
 
 async function loadComments(projectId: string) {
   const rows = await db.query.comments.findMany({
     where: eq(comments.projectId, projectId),
-    with: { replies: true },
+    with: {
+      replies: true,
+      statusChanges: { orderBy: (sc, { asc }) => [asc(sc.createdAt)] },
+    },
     orderBy: (c, { asc }) => [asc(c.createdAt)],
   });
 
@@ -32,6 +36,12 @@ async function loadComments(projectId: string) {
       body: r.body,
       createdAt: r.createdAt.toISOString(),
     })),
+    statusChanges: c.statusChanges.map((sc) => ({
+      id: sc.id,
+      status: sc.status,
+      changedByName: sc.changedByName,
+      createdAt: sc.createdAt.toISOString(),
+    })),
   }));
 }
 
@@ -40,16 +50,11 @@ export default async function ReviewPage({ params }: { params: { token: string }
     where: eq(projects.shareToken, params.token),
   });
 
-  if (!project) {
+  // A missing project and an archived one both 404 — deliberately not
+  // distinguishing "never existed" from "deactivated" in the response lets us
+  // avoid confirming to a stranger that a given token was ever valid.
+  if (!project || project.status === "archived") {
     notFound();
-  }
-
-  if (project.status === "archived") {
-    return (
-      <main>
-        <p>This review link has been deactivated.</p>
-      </main>
-    );
   }
 
   const session = await getServerSession(authOptions);
@@ -93,14 +98,21 @@ export default async function ReviewPage({ params }: { params: { token: string }
 
   if (project.type === "pdf" && project.assetPath) {
     const signedUrl = await getSignedDownloadUrl(project.assetPath);
+    const rows = await loadComments(project.id);
+    // A PDF comment always carries a percentage anchor tied to a page number;
+    // a null one would be a data anomaly, not something to render a pin for.
+    const initialComments = rows.filter(
+      (c): c is typeof c & { anchor: NonNullable<(typeof c)["anchor"]> } => c.anchor !== null
+    );
+
     return (
-      <div style={{ position: "fixed", inset: 0 }}>
-        <iframe
-          src={signedUrl}
-          title={project.title}
-          style={{ width: "100%", height: "100%", border: "none" }}
-        />
-      </div>
+      <PdfReviewOverlay
+        projectId={project.id}
+        pdfUrl={signedUrl}
+        title={project.title}
+        isOwner={isOwner}
+        initialComments={initialComments}
+      />
     );
   }
 

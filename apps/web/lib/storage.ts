@@ -7,24 +7,31 @@ function requiredEnv(name: string): string {
   return value;
 }
 
-const bucket = requiredEnv("STORAGE_BUCKET");
+// Lazily constructed — building at module scope would run at Next.js's
+// "collecting page data" build step (which imports every route module) and
+// fail without storage credentials even being needed yet. Every other
+// external client in this app (Paddle, Resend) already follows this pattern.
+let s3Client: S3Client | null = null;
 
-const s3 = new S3Client({
-  endpoint: requiredEnv("STORAGE_ENDPOINT"),
-  region: "auto",
-  credentials: {
-    accessKeyId: requiredEnv("STORAGE_ACCESS_KEY_ID"),
-    secretAccessKey: requiredEnv("STORAGE_SECRET_ACCESS_KEY"),
-  },
-  forcePathStyle: process.env["STORAGE_FORCE_PATH_STYLE"] === "true",
-});
+function getS3(): S3Client {
+  s3Client ??= new S3Client({
+    endpoint: requiredEnv("STORAGE_ENDPOINT"),
+    region: "auto",
+    credentials: {
+      accessKeyId: requiredEnv("STORAGE_ACCESS_KEY_ID"),
+      secretAccessKey: requiredEnv("STORAGE_SECRET_ACCESS_KEY"),
+    },
+    forcePathStyle: process.env["STORAGE_FORCE_PATH_STYLE"] === "true",
+  });
+  return s3Client;
+}
 
 const SIGNED_URL_EXPIRY_SECONDS = 24 * 60 * 60;
 
 export async function uploadObject(key: string, body: Buffer, contentType: string): Promise<void> {
-  await s3.send(
+  await getS3().send(
     new PutObjectCommand({
-      Bucket: bucket,
+      Bucket: requiredEnv("STORAGE_BUCKET"),
       Key: key,
       Body: body,
       ContentType: contentType,
@@ -33,7 +40,7 @@ export async function uploadObject(key: string, body: Buffer, contentType: strin
 }
 
 export async function getSignedDownloadUrl(key: string): Promise<string> {
-  return getSignedUrl(s3, new GetObjectCommand({ Bucket: bucket, Key: key }), {
+  return getSignedUrl(getS3(), new GetObjectCommand({ Bucket: requiredEnv("STORAGE_BUCKET"), Key: key }), {
     expiresIn: SIGNED_URL_EXPIRY_SECONDS,
   });
 }

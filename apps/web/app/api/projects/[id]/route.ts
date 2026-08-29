@@ -16,12 +16,12 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   const body = await request.json().catch(() => null);
   const action = body?.action;
 
-  if (action !== "archive" && action !== "regenerate") {
+  if (action !== "archive" && action !== "regenerate" && action !== "toggle_notifications") {
     return NextResponse.json(
       {
         error: {
           code: "INVALID_ACTION",
-          message: "action must be 'archive' or 'regenerate'.",
+          message: "action must be 'archive', 'regenerate', or 'toggle_notifications'.",
         },
       },
       { status: 400 }
@@ -38,11 +38,16 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     );
   }
 
-  const updates = action === "archive" ? { status: "archived" as const } : { shareToken: generateShareToken() };
+  const updates =
+    action === "archive"
+      ? { status: "archived" as const }
+      : action === "regenerate"
+        ? { shareToken: generateShareToken() }
+        : { notificationsEnabled: !existing.notificationsEnabled };
 
   const [project] = await db
     .update(projects)
-    .set(updates)
+    .set({ ...updates, updatedAt: new Date() })
     .where(eq(projects.id, params.id))
     .returning();
 

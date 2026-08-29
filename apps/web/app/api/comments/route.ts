@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { db, comments, projects, eq, and } from "@easymarker/db";
 import { authOptions } from "@/lib/auth";
+import { notifyOwnerOfNewComment } from "@/lib/notifications";
+import { checkCommentLimit } from "@/lib/plan-limits";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -16,7 +18,10 @@ export async function GET(request: Request) {
 
   const rows = await db.query.comments.findMany({
     where: eq(comments.projectId, projectId),
-    with: { replies: true },
+    with: {
+      replies: true,
+      statusChanges: { orderBy: (sc, { asc }) => [asc(sc.createdAt)] },
+    },
     orderBy: (c, { asc }) => [asc(c.createdAt)],
   });
 
@@ -87,6 +92,21 @@ export async function POST(request: Request) {
     );
   }
 
+  const limitCheck = await checkCommentLimit(projectId, project.workspaceId);
+  if (!limitCheck.ok) {
+    return NextResponse.json(
+      {
+        error: {
+          code: "PLAN_LIMIT_REACHED",
+          message: isOwner
+            ? `This project has reached its ${limitCheck.limit}-comment limit on the ${limitCheck.plan} plan. Upgrade to keep collecting feedback.`
+            : "This project isn't accepting new comments right now.",
+        },
+      },
+      { status: 403 }
+    );
+  }
+
   const [comment] = await db
     .insert(comments)
     .values({
@@ -100,6 +120,13 @@ export async function POST(request: Request) {
       positionY,
     })
     .returning();
+
+  await notifyOwnerOfNewComment({
+    projectId,
+    isOwnerAuthored: isOwner,
+    commenterName: reviewerName,
+    commentBody: text,
+  });
 
   return NextResponse.json({ comment }, { status: 201 });
 }

@@ -2,6 +2,8 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { UpgradeButton } from "./UpgradeButton";
+import styles from "./UploadForm.module.css";
 
 const ACCEPTED = "image/png,image/jpeg,image/webp,image/gif,application/pdf";
 
@@ -11,9 +13,13 @@ export function UploadForm() {
   const [dragOver, setDragOver] = useState(false);
   const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [failedFile, setFailedFile] = useState<File | null>(null);
 
   function upload(file: File) {
     setError(null);
+    setErrorCode(null);
+    setFailedFile(null);
     setProgress(0);
 
     const formData = new FormData();
@@ -35,14 +41,21 @@ export function UploadForm() {
       try {
         const data = JSON.parse(xhr.responseText);
         setError(data.error?.message ?? "Upload failed. Try again.");
+        if (data.error?.code === "PLAN_LIMIT_REACHED") {
+          setErrorCode("PLAN_LIMIT_REACHED");
+        } else {
+          setFailedFile(file);
+        }
       } catch {
         setError("Upload failed. Try again.");
+        setFailedFile(file);
       }
     };
 
     xhr.onerror = () => {
       setProgress(null);
-      setError("Upload failed. Check your connection and try again.");
+      setFailedFile(file);
+      setError("Upload was interrupted. Check your connection and try again.");
     };
 
     xhr.send(formData);
@@ -62,31 +75,77 @@ export function UploadForm() {
   }
 
   return (
-    <div
-      onDragOver={(e) => {
-        e.preventDefault();
-        setDragOver(true);
-      }}
-      onDragLeave={() => setDragOver(false)}
-      onDrop={handleDrop}
-      onClick={() => inputRef.current?.click()}
-      data-dragover={dragOver}
-      role="button"
-      tabIndex={0}
-    >
-      <input
-        ref={inputRef}
-        type="file"
-        accept={ACCEPTED}
-        onChange={handleFileSelect}
-        style={{ display: "none" }}
-      />
-      {progress !== null ? (
-        <p>Uploading… {progress}%</p>
-      ) : (
-        <p>Drag and drop an image or PDF here, or click to browse. Max 50 MB.</p>
+    <div>
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+        onClick={() => inputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") inputRef.current?.click();
+        }}
+        className={`${styles.dropzone} ${dragOver ? styles.dropzoneActive : ""}`}
+        role="button"
+        tabIndex={0}
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          accept={ACCEPTED}
+          onChange={handleFileSelect}
+          style={{ display: "none" }}
+        />
+
+        <svg className={styles.icon} width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M12 16V4m0 0L7 9m5-5l5 5M5 16v2a2 2 0 002 2h10a2 2 0 002-2v-2"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+
+        {progress !== null ? (
+          <>
+            <p className={styles.hint}>Uploading… {progress}%</p>
+            <div className={styles.progressTrack}>
+              <div className={styles.progressFill} style={{ width: `${progress}%` }} />
+            </div>
+          </>
+        ) : (
+          <>
+            <p className={styles.hint}>Drag and drop, or click to browse</p>
+            <p className={styles.hintMuted}>PNG, JPG, WebP, GIF, or PDF — up to 50 MB</p>
+          </>
+        )}
+      </div>
+
+      {error && (
+        <p role="alert" className={styles.error}>
+          {error}
+          {errorCode === "PLAN_LIMIT_REACHED" && (
+            <span onClick={(e) => e.stopPropagation()}>
+              <UpgradeButton plan="pro" label="Upgrade to Pro" />
+            </span>
+          )}
+          {failedFile && (
+            <button
+              type="button"
+              className="btn btnSecondary btnSm"
+              onClick={(e) => {
+                e.stopPropagation();
+                upload(failedFile);
+              }}
+            >
+              Retry
+            </button>
+          )}
+        </p>
       )}
-      {error && <p role="alert">{error}</p>}
     </div>
   );
 }

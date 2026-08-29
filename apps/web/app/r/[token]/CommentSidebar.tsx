@@ -1,9 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import type { CommentData } from "./types";
+import type { CommentData, ReplyData, StatusChangeData } from "./types";
 import type { GuestIdentity } from "@/lib/guest-client";
 import styles from "./CommentSidebar.module.css";
+
+type TimelineItem = ({ kind: "reply" } & ReplyData) | ({ kind: "status" } & StatusChangeData);
+
+function mergeTimeline(replies: ReplyData[], statusChanges: StatusChangeData[]): TimelineItem[] {
+  const items: TimelineItem[] = [
+    ...replies.map((r): TimelineItem => ({ kind: "reply", ...r })),
+    ...statusChanges.map((s): TimelineItem => ({ kind: "status", ...s })),
+  ];
+  return items.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+}
 
 const STATUS_LABELS: Record<CommentData["status"], string> = {
   open: "Open",
@@ -135,17 +145,24 @@ export function CommentSidebar({
               </div>
             )}
 
-            {comment.replies.length > 0 && (
+            {(comment.replies.length > 0 || comment.statusChanges.length > 0) && (
               <div className={styles.replies}>
-                {comment.replies.map((reply) => (
-                  <div key={reply.id} className={styles.replyItem}>
-                    <div className={styles.replyHeader}>
-                      <span className={styles.replyAuthor}>{reply.authorName}</span>
-                      <time className={styles.replyTime}>{new Date(reply.createdAt).toLocaleString()}</time>
+                {mergeTimeline(comment.replies, comment.statusChanges).map((item) =>
+                  item.kind === "reply" ? (
+                    <div key={`reply-${item.id}`} className={styles.replyItem}>
+                      <div className={styles.replyHeader}>
+                        <span className={styles.replyAuthor}>{item.authorName}</span>
+                        <time className={styles.replyTime}>{new Date(item.createdAt).toLocaleString()}</time>
+                      </div>
+                      <p className={styles.replyBody}>{urlify(item.body)}</p>
                     </div>
-                    <p className={styles.replyBody}>{urlify(reply.body)}</p>
-                  </div>
-                ))}
+                  ) : (
+                    <p key={`status-${item.id}`} className={styles.statusLogEntry}>
+                      {item.changedByName} marked this {STATUS_LABELS[item.status].toLowerCase()} ·{" "}
+                      {new Date(item.createdAt).toLocaleString()}
+                    </p>
+                  )
+                )}
               </div>
             )}
 

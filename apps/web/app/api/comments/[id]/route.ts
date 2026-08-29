@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { db, comments, projects, eq, and } from "@easymarker/db";
+import { db, comments, projects, commentStatusChanges, eq, and } from "@easymarker/db";
 import { authOptions } from "@/lib/auth";
 
 const VALID_STATUSES = ["open", "in_progress", "resolved"] as const;
@@ -48,5 +48,15 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     .where(eq(comments.id, params.id))
     .returning();
 
-  return NextResponse.json({ comment });
+  // Only log an actual transition — re-selecting the already-active status is
+  // a no-op click in the UI, not an event worth recording in the thread.
+  let statusChange = null;
+  if (existing.status !== status) {
+    [statusChange] = await db
+      .insert(commentStatusChanges)
+      .values({ commentId: params.id, status, changedByName: session.user.name })
+      .returning();
+  }
+
+  return NextResponse.json({ comment, statusChange });
 }

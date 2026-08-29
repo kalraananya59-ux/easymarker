@@ -19,9 +19,18 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   passwordHash: text("password_hash").notNull(),
   emailVerifiedAt: timestamptz("email_verified_at"),
+  verificationReminderSentAt: timestamptz("verification_reminder_sent_at"),
   workspaceId: uuid("workspace_id").references((): AnyPgColumn => workspaces.id),
   createdAt: timestamptz("created_at").notNull().defaultNow(),
 });
+
+export const emailVerificationTokens = pgTable("email_verification_tokens", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamptz("expires_at").notNull(),
+  createdAt: timestamptz("created_at").notNull().defaultNow(),
+}, (t) => [index("email_verification_tokens_user_id_idx").on(t.userId)]);
 
 export const workspaces = pgTable("workspaces", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -29,8 +38,9 @@ export const workspaces = pgTable("workspaces", {
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
   plan: planEnum("plan").notNull().default("free"),
-  stripeCustomerId: text("stripe_customer_id"),
+  paddleCustomerId: text("paddle_customer_id"),
   apiKeyHash: text("api_key_hash").unique(),
+  onboardingCopiedLinkAt: timestamptz("onboarding_copied_link_at"),
   createdAt: timestamptz("created_at").notNull().defaultNow(),
 });
 
@@ -45,6 +55,7 @@ export const projects = pgTable("projects", {
   shareToken: text("share_token").notNull().unique(),
   notificationsEnabled: boolean("notifications_enabled").notNull().default(true),
   createdAt: timestamptz("created_at").notNull().defaultNow(),
+  updatedAt: timestamptz("updated_at").notNull().defaultNow(),
 }, (t) => [
   index("projects_workspace_id_idx").on(t.workspaceId),
   index("projects_share_token_idx").on(t.shareToken),
@@ -74,20 +85,34 @@ export const commentReplies = pgTable("comment_replies", {
   createdAt: timestamptz("created_at").notNull().defaultNow(),
 }, (t) => [index("comment_replies_comment_id_idx").on(t.commentId)]);
 
+export const commentStatusChanges = pgTable("comment_status_changes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  commentId: uuid("comment_id").notNull().references(() => comments.id),
+  status: commentStatusEnum("status").notNull(),
+  changedByName: text("changed_by_name").notNull(),
+  createdAt: timestamptz("created_at").notNull().defaultNow(),
+}, (t) => [index("comment_status_changes_comment_id_idx").on(t.commentId)]);
+
 export const commentsRelations = relations(comments, ({ many }) => ({
   replies: many(commentReplies),
+  statusChanges: many(commentStatusChanges),
 }));
 
 export const commentRepliesRelations = relations(commentReplies, ({ one }) => ({
   comment: one(comments, { fields: [commentReplies.commentId], references: [comments.id] }),
 }));
 
+export const commentStatusChangesRelations = relations(commentStatusChanges, ({ one }) => ({
+  comment: one(comments, { fields: [commentStatusChanges.commentId], references: [comments.id] }),
+}));
+
 export const subscriptions = pgTable("subscriptions", {
   id: uuid("id").primaryKey().defaultRandom(),
   workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id),
-  stripeSubscriptionId: text("stripe_subscription_id").notNull(),
+  paddleSubscriptionId: text("paddle_subscription_id").notNull().unique(),
   status: text("status").notNull(),
   currentPeriodEnd: timestamptz("current_period_end").notNull(),
   plan: planEnum("plan").notNull(),
+  createdAt: timestamptz("created_at").notNull().defaultNow(),
   updatedAt: timestamptz("updated_at").notNull().defaultNow(),
-});
+}, (t) => [index("subscriptions_workspace_id_idx").on(t.workspaceId)]);

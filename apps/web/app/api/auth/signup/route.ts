@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 import { randomBytes } from "crypto";
 import { db, users, workspaces, eq } from "@easymarker/db";
+import { sendAccountVerificationEmail } from "@/lib/verification";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -50,7 +51,27 @@ export async function POST(request: Request) {
 
   const passwordHash = await hash(password, 12);
 
-  const [user] = await db.insert(users).values({ email, name, passwordHash }).returning();
+  // The existence check above is a plain read, not a lock — two submissions
+  // for the same email (a double-click, or two tabs) can both pass it and
+  // then race on this insert's unique constraint. Catch that specifically
+  // rather than letting an unhandled Postgres error reach the client as a
+  // broken, non-JSON response.
+  let user: typeof users.$inferSelect | undefined;
+  try {
+    [user] = await db.insert(users).values({ email, name, passwordHash }).returning();
+  } catch (err) {
+    if ((err as { code?: string }).code === "23505") {
+      return NextResponse.json(
+        { error: { code: "EMAIL_TAKEN", message: "An account with that email already exists." } },
+        { status: 409 }
+      );
+    }
+    console.error("signup: failed to create user", err);
+    return NextResponse.json(
+      { error: { code: "SIGNUP_FAILED", message: "Could not create your account. Try again." } },
+      { status: 500 }
+    );
+  }
   if (!user) {
     return NextResponse.json(
       { error: { code: "SIGNUP_FAILED", message: "Could not create your account. Try again." } },
@@ -58,10 +79,19 @@ export async function POST(request: Request) {
     );
   }
 
-  const [workspace] = await db
-    .insert(workspaces)
-    .values({ ownerId: user.id, name: `${name}'s Workspace`, slug: slugFromName(name) })
-    .returning();
+  let workspace: typeof workspaces.$inferSelect | undefined;
+  try {
+    [workspace] = await db
+      .insert(workspaces)
+      .values({ ownerId: user.id, name: `${name}'s Workspace`, slug: slugFromName(name) })
+      .returning();
+  } catch (err) {
+    console.error("signup: failed to create workspace", err);
+    return NextResponse.json(
+      { error: { code: "SIGNUP_FAILED", message: "Could not create your workspace. Try again." } },
+      { status: 500 }
+    );
+  }
   if (!workspace) {
     return NextResponse.json(
       { error: { code: "SIGNUP_FAILED", message: "Could not create your workspace. Try again." } },
@@ -70,6 +100,8 @@ export async function POST(request: Request) {
   }
 
   await db.update(users).set({ workspaceId: workspace.id }).where(eq(users.id, user.id));
+
+  await sendAccountVerificationEmail(user);
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

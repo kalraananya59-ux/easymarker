@@ -1,0 +1,36 @@
+# Deploy from the monorepo root, not from apps/proxy — the Dockerfile needs
+# the whole workspace as build context to resolve @easymarker/anchoring and
+# @easymarker/shared:
+#   flyctl deploy --config apps/proxy/fly.toml --dockerfile apps/proxy/Dockerfile .
+#
+# "easymarker-proxy" is a placeholder — Fly app names are globally unique
+# across ALL Fly users, so this will likely need changing to something
+# available before your first `flyctl apps create`.
+app = "easymarker-proxy"
+primary_region = "iad"
+
+[build]
+
+[http_service]
+  internal_port = 4000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  # The proxy is on the critical path for every review-page load, so unlike
+  # the web app it's worth keeping one machine warm to avoid a cold-start
+  # delay showing up mid-review-session. Bump to 0 if cost matters more than
+  # that latency pre-launch.
+  min_machines_running = 1
+  processes = ["app"]
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/health"
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1

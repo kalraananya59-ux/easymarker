@@ -1,0 +1,23 @@
+.planRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.planLabel {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.error {
+  margin-top: var(--space-3);
+  font-size: 13px;
+  color: var(--red-500);
+}

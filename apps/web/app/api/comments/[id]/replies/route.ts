@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { db, comments, commentReplies, projects, eq, and } from "@easymarker/db";
 import { authOptions } from "@/lib/auth";
+import { notifyOwnerOfNewComment } from "@/lib/notifications";
 
 const MAX_BODY_LENGTH = 5000;
 
@@ -34,6 +35,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
   const session = await getServerSession(authOptions);
   let authorId: string | null = null;
   let authorName = guestName;
+  let isOwner = false;
 
   if (session?.user.workspaceId) {
     const project = await db.query.projects.findFirst({
@@ -42,6 +44,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     if (project) {
       authorId = session.user.id;
       authorName = session.user.name;
+      isOwner = true;
     }
   }
 
@@ -56,6 +59,13 @@ export async function POST(request: Request, { params }: { params: { id: string 
     .insert(commentReplies)
     .values({ commentId: params.id, authorId, authorName, body: text })
     .returning();
+
+  await notifyOwnerOfNewComment({
+    projectId: comment.projectId,
+    isOwnerAuthored: isOwner,
+    commenterName: authorName,
+    commentBody: text,
+  });
 
   return NextResponse.json({ reply }, { status: 201 });
 }

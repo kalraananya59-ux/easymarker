@@ -218,6 +218,13 @@
   gap: 2px;
 }
 
+.statusLogEntry {
+  font-size: 11px;
+  font-style: italic;
+  color: var(--text-muted);
+  margin: 0;
+}
+
 .replyHeader {
   display: flex;
   align-items: baseline;

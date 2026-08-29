@@ -10,4 +10,4 @@ const client = postgres(process.env["DATABASE_URL"]);
 export const db = drizzle(client, { schema });
 export * from "./schema";
 export type { InferSelectModel, InferInsertModel } from "drizzle-orm";
-export { eq, and, desc, sql } from "drizzle-orm";
+export { eq, and, or, ne, lt, gte, inArray, desc, sql, count, isNull } from "drizzle-orm";

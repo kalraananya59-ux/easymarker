@@ -1,0 +1,1 @@
+ALTER TABLE "workspaces" ADD COLUMN "onboarding_copied_link_at" timestamp with time zone;

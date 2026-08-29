@@ -1,0 +1,21 @@
+.form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+}
+
+.error {
+  flex-basis: 100%;
+  margin-top: var(--space-1);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 13px;
+  color: var(--red-500);
+}

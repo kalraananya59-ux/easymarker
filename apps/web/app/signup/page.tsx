@@ -4,6 +4,8 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { AuthLayout } from "../AuthLayout";
+import styles from "../AuthLayout.module.css";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -50,15 +52,15 @@ export default function SignupPage() {
   }
 
   return (
-    <main>
-      <h1>Create your account</h1>
-      <form onSubmit={handleSubmit}>
+    <AuthLayout heading="Create your account">
+      <form onSubmit={handleSubmit} className={styles.form}>
         <input
           type="text"
           placeholder="Your name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
+          className="input"
         />
         <input
           type="email"
@@ -66,6 +68,7 @@ export default function SignupPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          className="input"
         />
         <input
           type="password"
@@ -74,15 +77,20 @@ export default function SignupPage() {
           onChange={(e) => setPassword(e.target.value)}
           minLength={8}
           required
+          className="input"
         />
-        <button type="submit" disabled={submitting}>
+        <button type="submit" disabled={submitting} className="btn btnPrimary">
           {submitting ? "Creating account…" : "Sign up"}
         </button>
-        {error && <p role="alert">{error}</p>}
+        {error && (
+          <p role="alert" className={styles.error}>
+            {error}
+          </p>
+        )}
       </form>
-      <p>
+      <p className={styles.footer}>
         Already have an account? <Link href="/signin">Sign in</Link>
       </p>
-    </main>
+    </AuthLayout>
   );
 }

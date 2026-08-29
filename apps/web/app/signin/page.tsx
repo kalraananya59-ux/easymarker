@@ -4,6 +4,8 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { AuthLayout } from "../AuthLayout";
+import styles from "../AuthLayout.module.css";
 
 export default function SigninPage() {
   const router = useRouter();
@@ -33,15 +35,15 @@ export default function SigninPage() {
   }
 
   return (
-    <main>
-      <h1>Sign in</h1>
-      <form onSubmit={handleSubmit}>
+    <AuthLayout heading="Sign in">
+      <form onSubmit={handleSubmit} className={styles.form}>
         <input
           type="email"
           placeholder="you@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          className="input"
         />
         <input
           type="password"
@@ -49,15 +51,20 @@ export default function SigninPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          className="input"
         />
-        <button type="submit" disabled={submitting}>
+        <button type="submit" disabled={submitting} className="btn btnPrimary">
           {submitting ? "Signing in…" : "Sign in"}
         </button>
-        {error && <p role="alert">{error}</p>}
+        {error && (
+          <p role="alert" className={styles.error}>
+            {error}
+          </p>
+        )}
       </form>
-      <p>
+      <p className={styles.footer}>
         Don&apos;t have an account? <Link href="/signup">Sign up</Link>
       </p>
-    </main>
+    </AuthLayout>
   );
 }

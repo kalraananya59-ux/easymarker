@@ -1,0 +1,30 @@
+.page {
+  min-height: 100vh;
+  background: var(--slate-50);
+}
+
+.content {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.section {
+  padding: var(--space-6);
+}
+
+.sectionHeading {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-1);
+}
+
+.sectionDescription {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-4);
+}

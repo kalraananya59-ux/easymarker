@@ -1,0 +1,78 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @easymarker/web typecheck
+      - run: pnpm --filter @easymarker/proxy typecheck
+
+  # Runs against the production database directly from CI, not from inside
+  # the deployed container — the runtime image only ships Next.js's traced
+  # standalone output (no devDependencies), so drizzle-kit isn't available
+  # there by design. Gates deploy-web so the schema is always current before
+  # the new app version starts serving traffic.
+  migrate:
+    needs: typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @easymarker/db db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+  deploy-proxy:
+    needs: typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: >
+          flyctl deploy
+          --config apps/proxy/fly.toml
+          --dockerfile apps/proxy/Dockerfile
+          --remote-only
+          .
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  deploy-web:
+    needs: migrate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: >
+          flyctl deploy
+          --config apps/web/fly.toml
+          --dockerfile apps/web/Dockerfile
+          --remote-only
+          --build-arg NEXT_PUBLIC_PADDLE_SANDBOX="${{ secrets.NEXT_PUBLIC_PADDLE_SANDBOX }}"
+          --build-arg NEXT_PUBLIC_PADDLE_CLIENT_TOKEN="${{ secrets.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN }}"
+          --build-arg NEXT_PUBLIC_PADDLE_PRICE_PRO="${{ secrets.NEXT_PUBLIC_PADDLE_PRICE_PRO }}"
+          --build-arg NEXT_PUBLIC_PADDLE_PRICE_AGENCY="${{ secrets.NEXT_PUBLIC_PADDLE_PRICE_AGENCY }}"
+          .
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { db, projects, eq, desc } from "@easymarker/db";
 import { checkUrlSubmission, generateShareToken } from "@easymarker/shared";
 import { authOptions } from "@/lib/auth";
+import { checkProjectLimit } from "@/lib/plan-limits";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -46,6 +47,19 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: { code: result.code, message: result.message } },
       { status: 400 }
+    );
+  }
+
+  const limitCheck = await checkProjectLimit(session.user.workspaceId);
+  if (!limitCheck.ok) {
+    return NextResponse.json(
+      {
+        error: {
+          code: "PLAN_LIMIT_REACHED",
+          message: `You've reached the ${limitCheck.limit}-project limit on the ${limitCheck.plan} plan. Upgrade to add more.`,
+        },
+      },
+      { status: 403 }
     );
   }
 

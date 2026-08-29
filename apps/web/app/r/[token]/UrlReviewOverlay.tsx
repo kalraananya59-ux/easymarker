@@ -185,7 +185,7 @@ export function UrlReviewOverlay({
       });
       const data = await res.json();
       if (res.ok) {
-        setComments((prev) => [...prev, { ...data.comment, anchor: pendingPin.anchor, replies: [] }]);
+        setComments((prev) => [...prev, { ...data.comment, anchor: pendingPin.anchor, replies: [], statusChanges: [] }]);
         setPendingPin(null);
         setDraftText("");
       }
@@ -215,8 +215,15 @@ export function UrlReviewOverlay({
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ status }),
     });
+    const data = await res.json();
     if (res.ok) {
-      setComments((prev) => prev.map((c) => (c.id === commentId ? { ...c, status } : c)));
+      setComments((prev) =>
+        prev.map((c) =>
+          c.id === commentId
+            ? { ...c, status, statusChanges: data.statusChange ? [...c.statusChanges, data.statusChange] : c.statusChanges }
+            : c
+        )
+      );
     }
   }
 

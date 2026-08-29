@@ -1,0 +1,62 @@
+.card {
+  padding: var(--space-5) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.heading {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+@media (min-width: 640px) {
+  .list {
+    flex-direction: row;
+    gap: var(--space-6);
+  }
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.stepDone {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--slate-200);
+  color: transparent;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.markDone {
+  background: var(--green-500);
+  border-color: var(--green-500);
+  color: var(--white);
+}

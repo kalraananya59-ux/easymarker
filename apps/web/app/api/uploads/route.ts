@@ -6,6 +6,7 @@ import { generateShareToken } from "@easymarker/shared";
 import { authOptions } from "@/lib/auth";
 import { validateUploadedFile } from "@/lib/file-validation";
 import { uploadObject } from "@/lib/storage";
+import { checkProjectLimit } from "@/lib/plan-limits";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -33,6 +34,19 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: { code: validation.code, message: validation.message } },
       { status: 400 }
+    );
+  }
+
+  const limitCheck = await checkProjectLimit(session.user.workspaceId);
+  if (!limitCheck.ok) {
+    return NextResponse.json(
+      {
+        error: {
+          code: "PLAN_LIMIT_REACHED",
+          message: `You've reached the ${limitCheck.limit}-project limit on the ${limitCheck.plan} plan. Upgrade to add more.`,
+        },
+      },
+      { status: 403 }
     );
   }
 
