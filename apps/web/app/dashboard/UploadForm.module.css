@@ -25,6 +25,17 @@
   background: var(--blue-50);
 }
 
+.dropzoneDisabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.dropzoneDisabled:hover,
+.dropzoneDisabled:focus-visible {
+  border-color: var(--slate-200);
+  background: var(--slate-50);
+}
+
 .icon {
   color: var(--text-muted);
 }

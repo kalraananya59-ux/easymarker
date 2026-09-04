@@ -1,46 +1,29 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-
-function requiredEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) throw new Error(`${name} environment variable is required`);
-  return value;
-}
+import { UTApi } from "uploadthing/server";
 
 // Lazily constructed — building at module scope would run at Next.js's
 // "collecting page data" build step (which imports every route module) and
-// fail without storage credentials even being needed yet. Every other
-// external client in this app (Paddle, Resend) already follows this pattern.
-let s3Client: S3Client | null = null;
+// fail without UPLOADTHING_TOKEN even being needed yet. Every other external
+// client in this app (Paddle, Resend) already follows this pattern.
+let utapi: UTApi | null = null;
 
-function getS3(): S3Client {
-  s3Client ??= new S3Client({
-    endpoint: requiredEnv("STORAGE_ENDPOINT"),
-    region: "auto",
-    credentials: {
-      accessKeyId: requiredEnv("STORAGE_ACCESS_KEY_ID"),
-      secretAccessKey: requiredEnv("STORAGE_SECRET_ACCESS_KEY"),
-    },
-    forcePathStyle: process.env["STORAGE_FORCE_PATH_STYLE"] === "true",
-  });
-  return s3Client;
+function getUtapi(): UTApi {
+  if (!process.env["UPLOADTHING_TOKEN"]) {
+    throw new Error("UPLOADTHING_TOKEN environment variable is required");
+  }
+  utapi ??= new UTApi();
+  return utapi;
 }
 
-const SIGNED_URL_EXPIRY_SECONDS = 24 * 60 * 60;
+// Returns the file's permanent public URL — UploadThing serves uploaded
+// files at a stable URL by default (public-read ACL), so there's no signing
+// step; the returned URL is what gets stored as the project's assetPath.
+export async function uploadObject(key: string, body: Buffer, contentType: string): Promise<string> {
+  const file = new File([new Uint8Array(body)], key, { type: contentType });
+  const response = await getUtapi().uploadFiles(file);
 
-export async function uploadObject(key: string, body: Buffer, contentType: string): Promise<void> {
-  await getS3().send(
-    new PutObjectCommand({
-      Bucket: requiredEnv("STORAGE_BUCKET"),
-      Key: key,
-      Body: body,
-      ContentType: contentType,
-    })
-  );
-}
+  if (response.error) {
+    throw new Error(`UploadThing upload failed: ${response.error.message}`);
+  }
 
-export async function getSignedDownloadUrl(key: string): Promise<string> {
-  return getSignedUrl(getS3(), new GetObjectCommand({ Bucket: requiredEnv("STORAGE_BUCKET"), Key: key }), {
-    expiresIn: SIGNED_URL_EXPIRY_SECONDS,
-  });
+  return response.data.ufsUrl;
 }

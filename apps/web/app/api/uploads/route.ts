@@ -8,7 +8,19 @@ import { validateUploadedFile } from "@/lib/file-validation";
 import { uploadObject } from "@/lib/storage";
 import { checkProjectLimit } from "@/lib/plan-limits";
 
+// File storage isn't wired up in this deployment yet — URL projects still
+// work, but uploads are turned off at the API level too, not just hidden in
+// the UI, so a direct POST here fails cleanly instead of hitting storage.
+const UPLOADS_ENABLED = false;
+
 export async function POST(request: Request) {
+  if (!UPLOADS_ENABLED) {
+    return NextResponse.json(
+      { error: { code: "UPLOADS_DISABLED", message: "Image and PDF uploads aren't available yet." } },
+      { status: 503 }
+    );
+  }
+
   const session = await getServerSession(authOptions);
   if (!session?.user.workspaceId) {
     return NextResponse.json(
@@ -51,9 +63,10 @@ export async function POST(request: Request) {
   }
 
   const key = `${session.user.workspaceId}/${randomUUID()}`;
+  let assetUrl: string;
 
   try {
-    await uploadObject(key, buffer, validation.mime);
+    assetUrl = await uploadObject(key, buffer, validation.mime);
   } catch {
     return NextResponse.json(
       { error: { code: "UPLOAD_FAILED", message: "Could not store the file. Try again." } },
@@ -69,7 +82,7 @@ export async function POST(request: Request) {
     .values({
       workspaceId: session.user.workspaceId,
       type: validation.projectType,
-      assetPath: key,
+      assetPath: assetUrl,
       title,
       shareToken,
     })

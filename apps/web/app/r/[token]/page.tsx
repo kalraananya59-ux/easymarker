@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { db, comments, projects, eq } from "@easymarker/db";
-import { getSignedDownloadUrl } from "@/lib/storage";
 import { authOptions } from "@/lib/auth";
 import { ReviewOverlay } from "./ReviewOverlay";
 import { UrlReviewOverlay } from "./UrlReviewOverlay";
@@ -82,13 +81,12 @@ export default async function ReviewPage({ params }: { params: { token: string }
   }
 
   if (project.type === "image" && project.assetPath) {
-    const signedUrl = await getSignedDownloadUrl(project.assetPath);
     const initialComments = await loadComments(project.id);
 
     return (
       <ReviewOverlay
         projectId={project.id}
-        imageSrc={signedUrl}
+        imageSrc={project.assetPath}
         imageAlt={project.title}
         isOwner={isOwner}
         initialComments={initialComments}
@@ -97,7 +95,6 @@ export default async function ReviewPage({ params }: { params: { token: string }
   }
 
   if (project.type === "pdf" && project.assetPath) {
-    const signedUrl = await getSignedDownloadUrl(project.assetPath);
     const rows = await loadComments(project.id);
     // A PDF comment always carries a percentage anchor tied to a page number;
     // a null one would be a data anomaly, not something to render a pin for.
@@ -108,7 +105,7 @@ export default async function ReviewPage({ params }: { params: { token: string }
     return (
       <PdfReviewOverlay
         projectId={project.id}
-        pdfUrl={signedUrl}
+        pdfUrl={project.assetPath}
         title={project.title}
         isOwner={isOwner}
         initialComments={initialComments}
