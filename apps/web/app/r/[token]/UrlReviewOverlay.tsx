@@ -257,7 +257,11 @@ export function UrlReviewOverlay({
                 borderRadius: "50% 50% 50% 0",
                 transform: "translate(-50%, -100%) rotate(-45deg)",
                 background:
-                  comment.status === "resolved" ? "#94a3b8" : pin.id === activeCommentId ? "#d97706" : "#2563eb",
+                  comment.status === "resolved"
+                    ? "var(--text-muted)"
+                    : pin.id === activeCommentId
+                      ? "var(--amber-500)"
+                      : "var(--blue-500)",
                 border: pin.confidence < 0.7 ? "2px dashed #f59e0b" : "none",
                 cursor: "pointer",
               }}
@@ -272,8 +276,8 @@ export function UrlReviewOverlay({
               left: pendingPin.x,
               top: pendingPin.y,
               transform: "translate(-50%, -100%)",
-              background: "white",
-              border: "1px solid #e2e8f0",
+              background: "var(--white)",
+              border: "1px solid var(--slate-200)",
               borderRadius: 8,
               padding: 8,
               width: 240,
@@ -298,7 +302,7 @@ export function UrlReviewOverlay({
         )}
       </div>
 
-      <div style={{ width: 340, borderLeft: "1px solid #e2e8f0", overflowY: "auto" }}>
+      <div style={{ width: 340, borderLeft: "1px solid var(--slate-200)", overflowY: "auto" }}>
         <CommentSidebar
           comments={comments}
           activeCommentId={activeCommentId}

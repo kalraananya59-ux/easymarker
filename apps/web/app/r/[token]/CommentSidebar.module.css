@@ -121,8 +121,8 @@
 }
 
 .avatarOwner {
-  background: var(--navy-900);
-  color: var(--white);
+  background: var(--navy-800);
+  color: var(--on-accent);
 }
 
 .avatarGuest {
@@ -276,7 +276,7 @@
 
 .replyInput:focus {
   border-color: var(--blue-400);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 0 0 3px rgba(109, 94, 248, 0.25);
 }
 
 .replyButton {

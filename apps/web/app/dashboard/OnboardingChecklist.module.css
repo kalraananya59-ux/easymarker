@@ -58,5 +58,5 @@
 .markDone {
   background: var(--green-500);
   border-color: var(--green-500);
-  color: var(--white);
+  color: var(--on-accent);
 }

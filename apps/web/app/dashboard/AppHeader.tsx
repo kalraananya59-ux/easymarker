@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Logo } from "../Logo";
 import { SignOutButton } from "./SignOutButton";
 import styles from "./AppHeader.module.css";
 
@@ -7,7 +8,7 @@ export function AppHeader({ title }: { title: string }) {
     <header className={styles.header}>
       <div className={styles.left}>
         <Link href="/dashboard" className={styles.logo}>
-          Easymarker
+          <Logo size={20} />
         </Link>
         <span className={styles.divider} aria-hidden="true" />
         <h1 className={styles.title}>{title}</h1>

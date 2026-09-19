@@ -90,7 +90,7 @@ function PdfPage({
 
   return (
     <div style={{ marginBottom: 24 }}>
-      <p style={{ fontSize: 12, color: "#94a3b8", margin: "0 0 6px" }}>Page {pageNumber}</p>
+      <p style={{ fontSize: 12, color: "var(--text-muted)", margin: "0 0 6px" }}>Page {pageNumber}</p>
       <div
         ref={(el) => {
           containerRef.current = el;
@@ -124,7 +124,12 @@ function PdfPage({
               height: 28,
               borderRadius: "50% 50% 50% 0",
               transform: "translate(-50%, -100%) rotate(-45deg)",
-              background: c.status === "resolved" ? "#94a3b8" : c.id === activeCommentId ? "#d97706" : "#2563eb",
+              background:
+                c.status === "resolved"
+                  ? "var(--text-muted)"
+                  : c.id === activeCommentId
+                    ? "var(--amber-500)"
+                    : "var(--blue-500)",
               border: "none",
               cursor: "pointer",
             }}
@@ -138,8 +143,8 @@ function PdfPage({
               left: `${pendingPin.xPct * 100}%`,
               top: `${pendingPin.yPct * 100}%`,
               transform: "translate(-50%, -100%)",
-              background: "white",
-              border: "1px solid #e2e8f0",
+              background: "var(--white)",
+              border: "1px solid var(--slate-200)",
               borderRadius: 8,
               padding: 8,
               width: 240,
@@ -350,7 +355,7 @@ export function PdfReviewOverlay({
         )}
       </div>
 
-      <div style={{ width: 340, borderLeft: "1px solid #e2e8f0", overflowY: "auto" }}>
+      <div style={{ width: 340, borderLeft: "1px solid var(--slate-200)", overflowY: "auto" }}>
         <CommentSidebar
           comments={comments}
           activeCommentId={activeCommentId}
