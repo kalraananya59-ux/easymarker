@@ -1,7 +1,7 @@
 import express, { type Express } from "express";
 import rateLimit from "express-rate-limit";
-import { isPrivateIp } from "./ssrf-guard";
-import { renderUrl, rewriteCss, timedFetch, ProxyFetchError } from "./render";
+import { isPrivateIp } from "./ssrf-guard.js";
+import { renderUrl, rewriteCss, timedFetch, ProxyFetchError } from "./render.js";
 
 const app: Express = express();
 const PORT = process.env["PROXY_PORT"] ?? 4000;

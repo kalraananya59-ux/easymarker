@@ -1,6 +1,6 @@
 import * as cheerio from "cheerio";
 import { isPrivateHostname } from "@easymarker/shared";
-import { getAnchoringBundle } from "./anchoring-bundle";
+import { getAnchoringBundle } from "./anchoring-bundle.js";
 
 const MAX_REDIRECTS = 3;
 const FETCH_TIMEOUT_MS = 10_000;
