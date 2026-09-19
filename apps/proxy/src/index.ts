@@ -1,9 +1,9 @@
-import express from "express";
+import express, { type Express } from "express";
 import rateLimit from "express-rate-limit";
 import { isPrivateIp } from "./ssrf-guard";
 import { renderUrl, rewriteCss, timedFetch, ProxyFetchError } from "./render";
 
-const app = express();
+const app: Express = express();
 const PORT = process.env["PROXY_PORT"] ?? 4000;
 const WEB_APP_ORIGIN = process.env["WEB_APP_ORIGIN"] ?? "http://localhost:3000";
 
@@ -144,6 +144,15 @@ app.get("/asset", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log("Proxy running on port " + PORT);
-});
+// Vercel's Node builder imports this module and calls the exported handler
+// per-request instead of running a persistent server — app.listen() would
+// just hang trying to bind a port that never receives traffic there, so it's
+// skipped whenever the VERCEL env var is present (set automatically by
+// Vercel's build/runtime, never set locally or in the Fly/Docker path).
+if (!process.env["VERCEL"]) {
+  app.listen(PORT, () => {
+    console.log("Proxy running on port " + PORT);
+  });
+}
+
+export default app;

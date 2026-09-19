@@ -21,10 +21,10 @@ jobs:
       - run: pnpm --filter @easymarker/web typecheck
       - run: pnpm --filter @easymarker/proxy typecheck
 
-  # Runs against the production database directly from CI. The web app
-  # deploys separately via Vercel's own GitHub integration (not this
-  # workflow), which doesn't run migrations as part of its build, so this
-  # job is what keeps the schema current on every push to main.
+  # Runs against the production database directly from CI. Both apps deploy
+  # separately via Vercel's own GitHub integration (not this workflow), which
+  # doesn't run migrations as part of its build, so this job is what keeps
+  # the schema current on every push to main.
   migrate:
     needs: typecheck
     runs-on: ubuntu-latest
@@ -41,18 +41,3 @@ jobs:
       - run: pnpm --filter @easymarker/db db:migrate
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
-  deploy-proxy:
-    needs: typecheck
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: >
-          flyctl deploy
-          --config apps/proxy/fly.toml
-          --dockerfile apps/proxy/Dockerfile
-          --remote-only
-          .
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
