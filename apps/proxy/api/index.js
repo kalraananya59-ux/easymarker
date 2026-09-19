@@ -37,36 +37,31 @@ async function isPrivateHostname(hostname) {
 import * as cheerio from "cheerio";
 
 // src/anchoring-bundle.ts
-import { build } from "esbuild";
-import { fileURLToPath } from "url";
-import path from "path";
-var __dirname = path.dirname(fileURLToPath(import.meta.url));
-var entryPoint = path.resolve(
-  __dirname,
-  "..",
-  "..",
-  "..",
-  "packages",
-  "anchoring",
-  "src",
-  "browser-entry.ts"
-);
 var cachedBundle = null;
 function getAnchoringBundle() {
+  if (true) {
+    return Promise.resolve('"use strict";(()=>{var T=["data-testid","data-test","data-qa","data-cy"];function a(e){return Number.isNaN(e)?.5:Math.max(0,Math.min(1,e))}function x(e){return typeof CSS<"u"&&CSS.escape?CSS.escape(e):e.replace(/[^a-zA-Z0-9_-]/g,t=>`\\\\${t}`)}function X(e,t){let n=t.getAttribute("id");if(n){let l=`#${x(n)}`;try{if(e.querySelectorAll(l).length===1)return{el:t,selector:l,confidence:1}}catch{}}for(let l of T){let o=t.getAttribute(l);if(o){let c=`[${l}="${o.replace(/"/g,\'\\\\"\')}"]`;try{if(e.querySelectorAll(c).length===1)return{el:t,selector:c,confidence:1}}catch{}}}let r=t.getAttribute("role");if(r){let l=`[role="${r.replace(/"/g,\'\\\\"\')}"]`;try{if(e.querySelectorAll(l).length===1)return{el:t,selector:l,confidence:.85}}catch{}}return null}function p(e,t,n){let r=t,l=0;for(;r;){let o=X(e,r);if(o)return o;if(n!==null&&l>=n)return null;r=r.parentElement,l++}return null}function k(e){let t=e.tagName.toLowerCase(),n=e.parentElement;if(!n)return t;let r=1;for(let l of Array.from(n.children)){if(l===e)break;r++}return`${t}:nth-child(${r})`}function v(e,t){if(e===t)return null;let n=[],r=t;for(;r&&r!==e;)n.unshift(k(r)),r=r.parentElement;return r!==e?null:n.join(" > ")}function M(e){let t=(e.textContent??"").replace(/\\s+/g," ").trim();if(t)return t.slice(0,32)}function h(e,t,n){let r=n.elementFromPoint(e,t)??n.body,l,o,c,s=p(n,r,8);if(s)l=s.el,o=s.selector,c=s.confidence;else{let d=p(n,r,null)??{el:n.body,selector:"body",confidence:0},g=v(d.el,r);l=r,o=g?`${d.selector} > ${g}`:d.selector,c=.6}let i=l.getBoundingClientRect(),b=i.width>0?a((e-i.left)/i.width):.5,A=i.height>0?a((t-i.top)/i.height):.5,u=n.documentElement,S=n.defaultView?.scrollX??0,P=n.defaultView?.scrollY??0,w=u.scrollWidth>0?a((e+S)/u.scrollWidth):.5,_=u.scrollHeight>0?a((t+P)/u.scrollHeight):.5;return{strategy:"dom",selector:o,offsetXPct:b,offsetYPct:A,textQuote:M(l),fallbackXPct:w,fallbackYPct:_,confidence:c}}function f(e,t,n){let r=e.getBoundingClientRect();return{x:r.left+(t??.5)*r.width,y:r.top+(n??.5)*r.height}}function R(e){let t=e.split(" > ");return t.length<=1?null:t.slice(0,-1).join(" > ")}var Y=4;function N(e,t){let n=e.createTreeWalker(e.body,Y),r=[],l=n.nextNode();for(;l;)(l.textContent??"").replace(/\\s+/g," ").includes(t)&&l.parentElement&&r.push(l.parentElement),l=n.nextNode();return r.length===1?r[0]:null}function y(e,t){if(e.strategy!=="dom")return null;if(e.selector)try{let n=t.querySelectorAll(e.selector);if(n.length===1)return{...f(n[0],e.offsetXPct,e.offsetYPct),confidence:e.confidence};if(n.length>1)return{...f(n[0],e.offsetXPct,e.offsetYPct),confidence:Math.min(e.confidence,.7)}}catch{}if(e.textQuote){let n=N(t,e.textQuote);if(n)return{...f(n,e.offsetXPct,e.offsetYPct),confidence:.5}}if(e.selector){let n=R(e.selector);if(n)try{let r=t.querySelectorAll(n);if(r.length===1)return{...f(r[0],e.offsetXPct,e.offsetYPct),confidence:.65}}catch{}}if(typeof e.fallbackXPct=="number"&&typeof e.fallbackYPct=="number"){let n=t.documentElement,r=t.defaultView?.scrollX??0,l=t.defaultView?.scrollY??0;return{x:e.fallbackXPct*n.scrollWidth-r,y:e.fallbackYPct*n.scrollHeight-l,confidence:0}}return null}function E(){return window.__EASYMARKER_PARENT_ORIGIN__??null}function m(e){let t=E();t&&window.parent.postMessage(e,t)}window.addEventListener("click",e=>{if(e.button!==0)return;e.preventDefault(),e.stopPropagation();let t=h(e.clientX,e.clientY,document);m({type:"easymarker:pin-candidate",anchor:t,viewportX:e.clientX,viewportY:e.clientY})},!0);window.addEventListener("resize",()=>{m({type:"easymarker:viewport-changed"})});window.addEventListener("message",e=>{let t=E();if(!t||e.origin!==t)return;let n=e.data;if(n?.type==="easymarker:resolve-anchors"&&Array.isArray(n.anchors)){let r=n.anchors.map(({id:l,anchor:o})=>({id:l,position:y(o,document)}));m({type:"easymarker:anchor-positions",positions:r})}});m({type:"easymarker:ready"});})();\n');
+  }
   if (!cachedBundle) {
-    cachedBundle = build({
-      entryPoints: [entryPoint],
-      bundle: true,
-      format: "iife",
-      target: "es2020",
-      write: false,
-      minify: true,
-      logLevel: "silent"
-    }).then((result) => {
+    cachedBundle = (async () => {
+      const { build } = await import("esbuild");
+      const { fileURLToPath } = await import("url");
+      const path = await import("path");
+      const __dirname = path.dirname(fileURLToPath(import.meta.url));
+      const entryPoint = path.resolve(__dirname, "..", "..", "..", "packages", "anchoring", "src", "browser-entry.ts");
+      const result = await build({
+        entryPoints: [entryPoint],
+        bundle: true,
+        format: "iife",
+        target: "es2020",
+        write: false,
+        minify: true,
+        logLevel: "silent"
+      });
       const output = result.outputFiles[0];
       if (!output) throw new Error("esbuild produced no output for the anchoring bundle");
       return output.text;
-    });
+    })();
   }
   return cachedBundle;
 }
