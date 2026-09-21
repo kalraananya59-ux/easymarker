@@ -1,20 +1,10 @@
 import { NextResponse } from "next/server";
 import { hash } from "bcryptjs";
-import { randomBytes } from "crypto";
 import { db, users, workspaces, eq } from "@easymarker/db";
+import { slugFromName } from "@easymarker/shared";
 import { sendAccountVerificationEmail } from "@/lib/verification";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function slugFromName(name: string): string {
-  const base = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 40);
-  const suffix = randomBytes(3).toString("hex");
-  return (base || "workspace") + "-" + suffix;
-}
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);

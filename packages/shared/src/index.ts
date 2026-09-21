@@ -27,6 +27,6 @@ export interface ApiError {
 }
 
 export { isPrivateHostname } from "./ssrf";
-export { generateShareToken, generateApiKey, generateVerificationToken } from "./token";
+export { generateShareToken, generateApiKey, generateVerificationToken, slugFromName } from "./token";
 export { checkUrlSubmission } from "./url-ingestion";
 export type { UrlSubmissionResult } from "./url-ingestion";

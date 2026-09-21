@@ -64,6 +64,13 @@
       "when": 1790000086915,
       "tag": "0008_purple_natasha_romanoff",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790000495084,
+      "tag": "0009_blue_randall",
+      "breakpoints": true
     }
   ]
 }

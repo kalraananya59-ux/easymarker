@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AuthLayout } from "../AuthLayout";
+import { GoogleSignInButton } from "../GoogleSignInButton";
 import styles from "../AuthLayout.module.css";
 
 export default function SigninPage() {
@@ -36,6 +37,8 @@ export default function SigninPage() {
 
   return (
     <AuthLayout heading="Sign in">
+      <GoogleSignInButton />
+      <div className={styles.divider}>or</div>
       <form onSubmit={handleSubmit} className={styles.form}>
         <input
           type="email"

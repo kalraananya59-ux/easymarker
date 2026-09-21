@@ -17,7 +17,10 @@ export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
-  passwordHash: text("password_hash").notNull(),
+  // Nullable: Google-only accounts never set one. The credentials provider
+  // rejects sign-in for a null hash rather than attempting to compare
+  // against it.
+  passwordHash: text("password_hash"),
   emailVerifiedAt: timestamptz("email_verified_at"),
   verificationReminderSentAt: timestamptz("verification_reminder_sent_at"),
   workspaceId: uuid("workspace_id").references((): AnyPgColumn => workspaces.id),
