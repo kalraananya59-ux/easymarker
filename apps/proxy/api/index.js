@@ -213,6 +213,7 @@ async function renderUrl(targetUrl, assetBaseUrl, parentOrigin) {
 
 // src/index.ts
 var app = express();
+app.set("trust proxy", true);
 var PORT = process.env["PROXY_PORT"] ?? 4e3;
 var WEB_APP_ORIGIN = process.env["WEB_APP_ORIGIN"] ?? "http://localhost:3000";
 var FORBIDDEN_RESPONSE_HEADERS = /* @__PURE__ */ new Set([

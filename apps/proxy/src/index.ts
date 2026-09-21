@@ -4,6 +4,16 @@ import { isPrivateIp } from "./ssrf-guard.js";
 import { renderUrl, rewriteCss, timedFetch, ProxyFetchError, BROWSER_HEADERS } from "./render.js";
 
 const app: Express = express();
+// Vercel's edge terminates TLS and forwards to this function over plain
+// HTTP internally, setting X-Forwarded-Proto to say the original request
+// was https. Express doesn't trust that header by default, so req.protocol
+// was reporting "http" for every request here — every asset URL we build
+// from it (scripts, stylesheets, fonts) came out as http://, which browsers
+// block as mixed content on an https:// page. This is what actually broke
+// every site's JS/CSS through the proxy, not a per-site compatibility
+// issue. Harmless for the Fly/Docker/local paths, which aren't behind a
+// proxy that rewrites this header.
+app.set("trust proxy", true);
 const PORT = process.env["PROXY_PORT"] ?? 4000;
 const WEB_APP_ORIGIN = process.env["WEB_APP_ORIGIN"] ?? "http://localhost:3000";
 
