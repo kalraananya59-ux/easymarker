@@ -70,6 +70,31 @@
   white-space: nowrap;
 }
 
+.inviteRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.inviteRow input {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  font-size: 12px;
+}
+
+.inviteSuccess {
+  font-size: 12px;
+  color: var(--green-500);
+  margin: 0;
+}
+
+.inviteErrorText {
+  font-size: 12px;
+  color: var(--red-500);
+  margin: 0;
+}
+
 .actions {
   display: flex;
   flex-direction: column;

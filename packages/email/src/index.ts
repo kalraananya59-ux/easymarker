@@ -1,4 +1,5 @@
 export { NewCommentEmail } from "./templates/new-comment";
 export { VerifyEmail } from "./templates/verify-email";
-export { sendNewCommentEmail, sendVerificationEmail } from "./send";
-export type { SendNewCommentEmailInput, SendVerificationEmailInput } from "./send";
+export { ReviewInviteEmail } from "./templates/review-invite";
+export { sendNewCommentEmail, sendVerificationEmail, sendReviewInviteEmail } from "./send";
+export type { SendNewCommentEmailInput, SendVerificationEmailInput, SendReviewInviteEmailInput } from "./send";

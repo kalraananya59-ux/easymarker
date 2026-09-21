@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { db, comments, projects, eq } from "@easymarker/db";
@@ -7,6 +8,15 @@ import { UrlReviewOverlay } from "./UrlReviewOverlay";
 import { PdfReviewOverlay } from "./PdfReviewOverlay";
 
 const PROXY_SERVICE_URL = process.env["PROXY_SERVICE_URL"] ?? "http://localhost:4000";
+
+// Review links are unguessable but not secret — anyone with the URL can
+// open them, which is the point (no-signup guest reviewers). They should
+// never end up in search results, though: this is per-project content
+// shared for a specific review, not something meant to be publicly
+// discoverable.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false, nocache: true },
+};
 
 async function loadComments(projectId: string) {
   const rows = await db.query.comments.findMany({

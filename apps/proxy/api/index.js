@@ -69,6 +69,11 @@ function getAnchoringBundle() {
 // src/render.ts
 var MAX_REDIRECTS = 3;
 var FETCH_TIMEOUT_MS = 1e4;
+var BROWSER_HEADERS = {
+  "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+  accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/avif,*/*;q=0.8",
+  "accept-language": "en-US,en;q=0.9"
+};
 var ProxyFetchError = class extends Error {
   constructor(code, message) {
     super(message);
@@ -164,6 +169,7 @@ function rewriteHtml(html, pageUrl, assetBaseUrl, anchoring) {
   });
   $("meta[http-equiv='Content-Security-Policy']").remove();
   $("base").remove();
+  $("head").prepend(`<base href="${pageUrl.href}">`);
   if (anchoring) {
     const escapeForInlineScript = (s) => s.replace(/<\/script/gi, "<\\/script");
     const originScript = `window.__EASYMARKER_PARENT_ORIGIN__=${JSON.stringify(anchoring.parentOrigin)};`;
@@ -187,9 +193,7 @@ function rewriteCss(css, baseUrl, assetBaseUrl) {
 }
 async function renderUrl(targetUrl, assetBaseUrl, parentOrigin) {
   const pageUrl = new URL(targetUrl);
-  const response = await timedFetch(pageUrl, {
-    headers: { "user-agent": "EasymarkerProxy/1.0 (+https://easymarker.io)" }
-  });
+  const response = await timedFetch(pageUrl, { headers: BROWSER_HEADERS });
   if (!response.ok) {
     throw new ProxyFetchError("FETCH_FAILED", `Target responded with status ${response.status}.`);
   }
@@ -303,7 +307,7 @@ app.get("/asset", async (req, res) => {
     return;
   }
   try {
-    const response = await timedFetch(assetUrl);
+    const response = await timedFetch(assetUrl, { headers: BROWSER_HEADERS });
     if (!response.ok || !response.body) {
       res.status(502).json({
         error: { code: "FETCH_FAILED", message: `Asset responded with status ${response.status}.` }

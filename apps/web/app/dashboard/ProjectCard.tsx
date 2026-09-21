@@ -78,6 +78,10 @@ export function ProjectCard({
   const [notifying, setNotifying] = useState(notificationsEnabled);
   const [toggling, setToggling] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteStatus, setInviteStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [inviteError, setInviteError] = useState<string | null>(null);
 
   // Start with the SSR-safe relative path so the client's first render matches
   // the server-rendered HTML exactly, then upgrade to the absolute URL after
@@ -101,6 +105,28 @@ export function ProjectCard({
     }
     await fetch("/api/onboarding/copy-link", { method: "POST" });
     router.refresh();
+  }
+
+  async function sendInvite(e: React.FormEvent) {
+    e.preventDefault();
+    setInviteStatus("sending");
+    setInviteError(null);
+
+    const res = await fetch(`/api/projects/${id}/invite`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email: inviteEmail.trim() }),
+    });
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      setInviteStatus("error");
+      setInviteError(data?.error?.message ?? "Could not send the invite. Try again.");
+      return;
+    }
+
+    setInviteStatus("sent");
+    setInviteEmail("");
   }
 
   async function archive() {
@@ -147,8 +173,39 @@ export function ProjectCard({
         </button>
       </div>
 
+      {showInvite && (
+        <form className={styles.inviteRow} onSubmit={sendInvite}>
+          <input
+            type="email"
+            required
+            placeholder="reviewer@example.com"
+            value={inviteEmail}
+            onChange={(e) => {
+              setInviteEmail(e.target.value);
+              if (inviteStatus !== "idle") setInviteStatus("idle");
+            }}
+            className="input"
+          />
+          <button type="submit" className="btn btnPrimary btnSm" disabled={inviteStatus === "sending"}>
+            {inviteStatus === "sending" ? "Sending…" : "Send invite"}
+          </button>
+        </form>
+      )}
+      {inviteStatus === "sent" && <p className={styles.inviteSuccess}>Invite sent.</p>}
+      {inviteStatus === "error" && <p className={styles.inviteErrorText}>{inviteError}</p>}
+
       <div className={styles.actions}>
         <div className={styles.exportRow}>
+          <button
+            type="button"
+            className={styles.exportLink}
+            onClick={() => {
+              setShowInvite((v) => !v);
+              setInviteStatus("idle");
+            }}
+          >
+            Invite by email
+          </button>
           <button type="button" className={styles.exportLink} onClick={() => setShowComments(true)}>
             Comments
           </button>

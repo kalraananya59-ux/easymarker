@@ -1,7 +1,7 @@
 import express, { type Express } from "express";
 import rateLimit from "express-rate-limit";
 import { isPrivateIp } from "./ssrf-guard.js";
-import { renderUrl, rewriteCss, timedFetch, ProxyFetchError } from "./render.js";
+import { renderUrl, rewriteCss, timedFetch, ProxyFetchError, BROWSER_HEADERS } from "./render.js";
 
 const app: Express = express();
 const PORT = process.env["PROXY_PORT"] ?? 4000;
@@ -113,7 +113,7 @@ app.get("/asset", async (req, res) => {
   }
 
   try {
-    const response = await timedFetch(assetUrl);
+    const response = await timedFetch(assetUrl, { headers: BROWSER_HEADERS });
     if (!response.ok || !response.body) {
       res.status(502).json({
         error: { code: "FETCH_FAILED", message: `Asset responded with status ${response.status}.` },

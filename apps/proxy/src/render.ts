@@ -5,6 +5,20 @@ import { getAnchoringBundle } from "./anchoring-bundle.js";
 const MAX_REDIRECTS = 3;
 const FETCH_TIMEOUT_MS = 10_000;
 
+// A self-identifying UA like "EasymarkerProxy/1.0" (the previous value) gets
+// silently blocked or degraded by ordinary bot-filtering on a large fraction
+// of real sites — this isn't about evading anything adversarial, it's what
+// any legitimate rendering tool sends so the page a user asked to review
+// actually loads the way a real visitor would see it. Applied to every
+// outbound fetch this proxy makes (the page itself and every asset it pulls
+// in), not just the initial request.
+export const BROWSER_HEADERS: Record<string, string> = {
+  "user-agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+  accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/avif,*/*;q=0.8",
+  "accept-language": "en-US,en;q=0.9",
+};
+
 export class ProxyFetchError extends Error {
   constructor(
     public code: "SSRF_BLOCKED" | "TOO_MANY_REDIRECTS" | "TIMEOUT" | "FETCH_FAILED" | "BAD_URL",
@@ -123,7 +137,16 @@ export function rewriteHtml(
   });
 
   $("meta[http-equiv='Content-Security-Policy']").remove();
+  // Every relative URL our explicit attribute rewriting above doesn't catch —
+  // <a href>, <form action>, anything a script constructs relative to the
+  // document — resolves against the iframe's actual URL (our own /render
+  // endpoint) without this, which is the wrong origin entirely and breaks
+  // navigation/links on most real sites. Removing any existing <base> (a
+  // site may already declare one, sometimes not pointing at its own
+  // canonical origin) and pointing ours at the real page fixes that class
+  // of breakage for anything not already made absolute above.
   $("base").remove();
+  $("head").prepend(`<base href="${pageUrl.href}">`);
 
   if (anchoring) {
     const escapeForInlineScript = (s: string) => s.replace(/<\/script/gi, "<\\/script");
@@ -161,9 +184,7 @@ export async function renderUrl(
   parentOrigin?: string
 ): Promise<RenderResult> {
   const pageUrl = new URL(targetUrl);
-  const response = await timedFetch(pageUrl, {
-    headers: { "user-agent": "EasymarkerProxy/1.0 (+https://easymarker.io)" },
-  });
+  const response = await timedFetch(pageUrl, { headers: BROWSER_HEADERS });
 
   if (!response.ok) {
     throw new ProxyFetchError("FETCH_FAILED", `Target responded with status ${response.status}.`);
