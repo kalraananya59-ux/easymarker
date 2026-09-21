@@ -32,6 +32,14 @@ export const emailVerificationTokens = pgTable("email_verification_tokens", {
   createdAt: timestamptz("created_at").notNull().defaultNow(),
 }, (t) => [index("email_verification_tokens_user_id_idx").on(t.userId)]);
 
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamptz("expires_at").notNull(),
+  createdAt: timestamptz("created_at").notNull().defaultNow(),
+}, (t) => [index("password_reset_tokens_user_id_idx").on(t.userId)]);
+
 export const workspaces = pgTable("workspaces", {
   id: uuid("id").primaryKey().defaultRandom(),
   ownerId: uuid("owner_id").notNull().references((): AnyPgColumn => users.id),

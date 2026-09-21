@@ -2,6 +2,7 @@ import { Resend } from "resend";
 import { NewCommentEmail } from "./templates/new-comment";
 import { VerifyEmail } from "./templates/verify-email";
 import { ReviewInviteEmail } from "./templates/review-invite";
+import { ResetPasswordEmail } from "./templates/reset-password";
 
 let client: Resend | null = null;
 
@@ -104,4 +105,30 @@ export async function sendReviewInviteEmail(input: SendReviewInviteEmailInput): 
   }
 
   console.log(`sendReviewInviteEmail: sent to ${input.to} (id: ${data?.id})`);
+}
+
+export interface SendPasswordResetEmailInput {
+  to: string;
+  name: string;
+  resetUrl: string;
+}
+
+export async function sendPasswordResetEmail(input: SendPasswordResetEmailInput): Promise<void> {
+  const from = process.env["EMAIL_FROM"];
+  if (!from) {
+    throw new Error("EMAIL_FROM environment variable is required to send email");
+  }
+
+  const { data, error } = await getClient().emails.send({
+    from,
+    to: input.to,
+    subject: "Reset your Easymarker password",
+    react: ResetPasswordEmail({ name: input.name, resetUrl: input.resetUrl }),
+  });
+
+  if (error) {
+    throw new Error(`Resend send failed: ${error.message}`);
+  }
+
+  console.log(`sendPasswordResetEmail: sent to ${input.to} (id: ${data?.id})`);
 }

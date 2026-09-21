@@ -57,6 +57,13 @@
       "when": 1787807231518,
       "tag": "0007_paddle_billing_rename",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790000086915,
+      "tag": "0008_purple_natasha_romanoff",
+      "breakpoints": true
     }
   ]
 }
