@@ -236,6 +236,27 @@ function proxyErrorResponse(res, err) {
     error: { code: "FETCH_FAILED", message: "Could not reach the target site." }
   });
 }
+function renderErrorPage(message, targetUrl) {
+  const linkHtml = targetUrl ? `<a href="${targetUrl.replace(/"/g, "&quot;")}" target="_blank" rel="noopener noreferrer">Open the site directly instead \u2192</a>` : "";
+  return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:#0a0e17; color:#f1f5f9; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; padding:24px; box-sizing:border-box; }
+  .box { max-width:420px; text-align:center; }
+  h1 { font-size:16px; font-weight:600; margin:0 0 8px; }
+  p { font-size:14px; line-height:1.6; color:#97a3b8; margin:0 0 16px; }
+  a { color:#6d5ef8; font-size:13px; font-weight:600; text-decoration:none; }
+  a:hover { text-decoration:underline; }
+</style></head>
+<body><div class="box">
+  <h1>This page couldn't be loaded for review</h1>
+  <p>${message}</p>
+  ${linkHtml}
+</div></body></html>`;
+}
+function sendRenderError(res, status, message, targetUrl) {
+  res.status(status).set("content-type", "text/html; charset=utf-8").send(renderErrorPage(message, targetUrl));
+}
 var renderLimiter = rateLimit({
   windowMs: 6e4,
   max: 100,
@@ -250,30 +271,22 @@ app.get("/render", renderLimiter, async (req, res) => {
   const target = req.query["url"];
   const token = req.query["token"];
   if (typeof target !== "string" || !target.startsWith("https://")) {
-    res.status(400).json({
-      error: { code: "INVALID_URL", message: "A valid https:// URL is required." }
-    });
+    sendRenderError(res, 400, "The link for this review project looks malformed.");
     return;
   }
   if (typeof token !== "string" || token.length < 12) {
-    res.status(400).json({
-      error: { code: "INVALID_TOKEN", message: "A valid review token is required." }
-    });
+    sendRenderError(res, 400, "This review link is missing or invalid.");
     return;
   }
   let hostname;
   try {
     hostname = new URL(target).hostname;
   } catch {
-    res.status(400).json({
-      error: { code: "INVALID_URL", message: "Could not parse the target URL." }
-    });
+    sendRenderError(res, 400, "The target URL for this review project couldn't be parsed.");
     return;
   }
   if (await isPrivateHostname(hostname)) {
-    res.status(403).json({
-      error: { code: "SSRF_BLOCKED", message: "Requests to private IP ranges are not allowed." }
-    });
+    sendRenderError(res, 403, "This URL points to a private network address, which isn't allowed.");
     return;
   }
   const assetBaseUrl = `${req.protocol}://${req.get("host")}/asset`;
@@ -281,7 +294,16 @@ app.get("/render", renderLimiter, async (req, res) => {
     const { html, contentType } = await renderUrl(target, assetBaseUrl, WEB_APP_ORIGIN);
     res.status(200).set("content-type", contentType).send(html);
   } catch (err) {
-    proxyErrorResponse(res, err);
+    if (err instanceof ProxyFetchError && err.code === "TIMEOUT") {
+      sendRenderError(res, 504, "The site took too long to respond.", target);
+      return;
+    }
+    sendRenderError(
+      res,
+      502,
+      "This site couldn't be loaded, likely because it blocks automated visitors like this one.",
+      target
+    );
   }
 });
 app.get("/asset", async (req, res) => {
