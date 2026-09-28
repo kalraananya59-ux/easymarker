@@ -37,6 +37,36 @@ const FEATURES = [
     ),
   },
   {
+    title: "Invite by email",
+    text: "Enter a reviewer's email and they get a direct link in their inbox — no need to copy-paste and message it yourself.",
+    icon: (
+      <svg {...ICON_PROPS}>
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="M3 7l9 6 9-6" />
+      </svg>
+    ),
+  },
+  {
+    title: "Track comment status",
+    text: "Mark every pin open, in progress, or resolved — so nothing quietly falls through the cracks between rounds.",
+    icon: (
+      <svg {...ICON_PROPS}>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M8 12l3 3 5-6" />
+      </svg>
+    ),
+  },
+  {
+    title: "Works on real websites",
+    text: "Not a static screenshot — reviewers see the live, working site and pin comments on the actual rendered page.",
+    icon: (
+      <svg {...ICON_PROPS}>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M3 12h18M12 3a14 14 0 010 18 14 14 0 010-18z" />
+      </svg>
+    ),
+  },
+  {
     title: "Export & share reports",
     text: "Turn every round of feedback into a clean CSV or PDF report, ready for your team or client.",
     icon: (
@@ -66,44 +96,65 @@ const STEPS = [
   },
 ];
 
+const TESTIMONIAL_PLACEHOLDERS = [1, 2, 3];
+
 export default function HomePage() {
   return (
     <div>
+      <div className={styles.announceBar}>
+        <span>New: Sign in with Google is here.</span>
+      </div>
+
       <nav className={styles.nav}>
         <Logo />
+        <div className={styles.navLinks}>
+          <a href="#features" className={styles.navLink}>
+            Features
+          </a>
+          <a href="#pricing" className={styles.navLink}>
+            Pricing
+          </a>
+        </div>
         <div className={styles.navActions}>
-          <Link href="/signin" className={styles.navLink}>
-            Sign in
+          <Link href="/signin" className="btn btnSecondary btnSm">
+            Log in
           </Link>
           <Link href="/signup" className="btn btnPrimary btnSm">
-            Sign up free
+            Sign up
           </Link>
         </div>
       </nav>
 
       <div className={styles.heroGlow} aria-hidden="true" />
 
-      <header className={styles.hero}>
-        <span className={styles.eyebrow}>No credit card required</span>
-        <h1 className={styles.headline}>
-          Website feedback <em>without the friction</em>
-        </h1>
-        <p className={styles.subhead}>
-          Share a link to any website. Reviewers pin comments exactly where they mean them — no
-          downloads, no accounts, no back-and-forth over email.
-        </p>
-        <div className={styles.ctaRow}>
-          <Link href="/signup" className="btn btnPrimary">
-            Start for free
-          </Link>
-          <Link href="/signin" className="btn btnSecondary">
-            Sign in
-          </Link>
-        </div>
-        <p className={styles.ctaHint}>Free forever for small projects. Upgrade any time.</p>
-      </header>
+      <section className={styles.heroSplit}>
+        <div className={styles.heroCopy}>
+          <span className={styles.eyebrow}>No credit card required</span>
+          <h1 className={styles.headline}>
+            Get client approval on your websites, <em>without the back-and-forth</em>.
+          </h1>
+          <p className={styles.subhead}>
+            Share a link to any website. Reviewers pin comments exactly where they mean them — no
+            downloads, no accounts, no email threads.
+          </p>
 
-      <div className={styles.previewWrap}>
+          <blockquote className={styles.placeholderQuote}>
+            <span className={styles.placeholderTag}>Placeholder — swap in a real customer quote</span>
+            <p>&ldquo;Your customer&apos;s testimonial will go here.&rdquo;</p>
+            <footer>Name, role — Company</footer>
+          </blockquote>
+
+          <div className={styles.ctaRow}>
+            <Link href="/signup" className="btn btnPrimary">
+              Start for free
+            </Link>
+            <Link href="/signin" className="btn btnSecondary">
+              Sign in
+            </Link>
+          </div>
+          <p className={styles.ctaHint}>Free forever for small projects. Upgrade any time.</p>
+        </div>
+
         <div className={styles.preview}>
           <div className={styles.previewChrome}>
             <span className={styles.dot} />
@@ -147,15 +198,15 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       <section className={styles.statsBand}>
         <div className={styles.statsBandInner}>
-          <h2 className={styles.statsHeading}>Your client opens a link. That's the whole onboarding.</h2>
+          <h2 className={styles.statsHeading}>Your client opens a link. That&apos;s the whole onboarding.</h2>
           <p className={styles.statsText}>
-            Every other review tool asks the person you're billing to create a password first.
-            Easymarker doesn't. Reviewers land, click, type — that's the only thing we ever ask, and
-            only once.
+            Every other review tool asks the person you&apos;re billing to create a password first.
+            Easymarker doesn&apos;t. Reviewers land, click, type — that&apos;s the only thing we ever
+            ask, and only once.
           </p>
           <div className={styles.statsRow}>
             <div className={styles.stat}>
@@ -188,17 +239,42 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className={styles.features}>
-        {FEATURES.map((feature) => (
-          <div key={feature.title} className={`card ${styles.feature}`}>
-            <div className={styles.featureIcon}>{feature.icon}</div>
-            <h2 className={styles.featureTitle}>{feature.title}</h2>
-            <p className={styles.featureText}>{feature.text}</p>
-          </div>
-        ))}
+      <section id="features" className={styles.featuresSection}>
+        <h2 className={styles.sectionHeading}>Everything you need to close feedback loops</h2>
+        <div className={styles.features}>
+          {FEATURES.map((feature) => (
+            <div key={feature.title} className={`card ${styles.feature}`}>
+              <div className={styles.featureIcon}>{feature.icon}</div>
+              <h3 className={styles.featureTitle}>{feature.title}</h3>
+              <p className={styles.featureText}>{feature.text}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
-      <section className={styles.pricing}>
+      <section className={styles.testimonials}>
+        <h2 className={styles.sectionHeading}>What people are saying</h2>
+        <p className={styles.testimonialsSubhead}>
+          We&apos;re early — these spots are reserved for real customer quotes as they come in.
+        </p>
+        <div className={styles.testimonialsGrid}>
+          {TESTIMONIAL_PLACEHOLDERS.map((i) => (
+            <div key={i} className={`card ${styles.testimonialCard}`}>
+              <span className={styles.placeholderTag}>Placeholder</span>
+              <p className={styles.testimonialText}>&ldquo;A real customer quote will go here.&rdquo;</p>
+              <div className={styles.testimonialAuthor}>
+                <div className={styles.testimonialAvatar} aria-hidden="true" />
+                <div>
+                  <p className={styles.testimonialName}>Name Surname</p>
+                  <p className={styles.testimonialRole}>Role, Company</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="pricing" className={styles.pricing}>
         <h2 className={styles.sectionHeading}>Pay for the people who fix things.</h2>
         <p className={styles.pricingSubhead}>Reviewers are always free and always unlimited.</p>
         <div className={styles.pricingGrid}>
@@ -256,8 +332,29 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className={styles.finalCta}>
+        <div className={styles.finalCtaGlow} aria-hidden="true" />
+        <h2 className={styles.finalCtaHeading}>You&apos;re one link away from your next round of feedback.</h2>
+        <Link href="/signup" className="btn btnPrimary">
+          Start for free
+        </Link>
+      </section>
+
       <footer className={styles.footer}>
-        <LogoMark size={18} />
+        <div className={styles.footerTop}>
+          <LogoMark size={18} />
+          <div className={styles.footerLinks}>
+            <a href="#features" className={styles.footerLink}>
+              Features
+            </a>
+            <a href="#pricing" className={styles.footerLink}>
+              Pricing
+            </a>
+            <Link href="/signin" className={styles.footerLink}>
+              Sign in
+            </Link>
+          </div>
+        </div>
         <p className={styles.footerText}>© {new Date().getFullYear()} Easymarker</p>
       </footer>
     </div>
