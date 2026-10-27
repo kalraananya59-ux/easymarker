@@ -86,7 +86,10 @@ export default async function DashboardPage({
 
   return (
     <div className={styles.page}>
-      <AppHeader title="Your projects" />
+      <AppHeader
+        title="Your projects"
+        description="Paste a link or upload a file, then send the review link to your client."
+      />
 
       <div className={styles.content}>
         <OnboardingChecklist
@@ -99,6 +102,9 @@ export default async function DashboardPage({
           <div className={`card ${styles.createCard}`}>
             <h2>Review a website</h2>
             <NewProjectForm />
+            <p className={styles.createHint}>
+              We load the live site so reviewers can click anywhere on it and leave a comment.
+            </p>
           </div>
           <div className={`card ${styles.createCard}`}>
             <h2>Review an image or PDF</h2>

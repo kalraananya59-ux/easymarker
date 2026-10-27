@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { db, users, eq } from "@easymarker/db";
 import { authOptions } from "@/lib/auth";
 import { CheckEmailCard } from "./CheckEmailCard";
+import { Logo } from "../Logo";
 import styles from "../AuthLayout.module.css";
 
 export default async function CheckEmailPage() {
@@ -22,7 +23,9 @@ export default async function CheckEmailPage() {
 
   return (
     <div className={styles.page}>
-      <span className={styles.logo}>Easymarker</span>
+      <span className={styles.logo}>
+        <Logo />
+      </span>
       <CheckEmailCard email={user?.email ?? ""} />
     </div>
   );

@@ -53,7 +53,7 @@ export default function SignupPage() {
   }
 
   return (
-    <AuthLayout heading="Create your account">
+    <AuthLayout heading="Create your account" subheading="Free forever for small projects. No credit card required.">
       <GoogleSignInButton />
       <div className={styles.divider}>or</div>
       <form onSubmit={handleSubmit} className={styles.form}>

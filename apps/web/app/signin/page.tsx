@@ -36,7 +36,7 @@ export default function SigninPage() {
   }
 
   return (
-    <AuthLayout heading="Sign in">
+    <AuthLayout heading="Welcome back" subheading="Sign in to see the latest feedback on your projects.">
       <GoogleSignInButton />
       <div className={styles.divider}>or</div>
       <form onSubmit={handleSubmit} className={styles.form}>

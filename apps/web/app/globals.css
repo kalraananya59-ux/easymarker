@@ -1,52 +1,70 @@
 :root {
-  /* Dark theme. Token NAMES are kept from the original light palette (every
-     component already references these) but values are repointed — this is
-     the single point of control for the whole app's look. Two roles that
-     used to share one token (--white as both "card background" and "text
-     sitting on a colored button") now have separate tokens: --white is
-     "surface" only, --on-accent is the fixed white used on colored buttons/
-     badges/pins so it never gets swept up in a background recolor. Same
-     split for --navy-900 (now heading text, near-white) vs --navy-800
-     (kept as a solid dark chip background, e.g. the Agency badge).
+  /* Easymarker palette: "studio night with marker colours".
+     A neutral charcoal base (like a dark design-tool canvas) with an
+     electric violet as the main accent, plus a small set of bright marker
+     colours (coral, lime, sky, pink) used for pins, statuses and the odd
+     hand-drawn flourish. Token NAMES are kept from the original palette
+     because every component references them; only the values change, so
+     this block is the single point of control for the whole app's look.
+
+     Roles:
+       --page-bg / --navy-950   page background
+       --white                  raised surface (cards, panels)
+       --slate-50               sunken surface (inputs, wells)
+       --slate-100 / -200       hairline / strong borders
+       --blue-*                 violet — primary actions and open pins
+       --amber-*                sky — "in progress" and the active pin
+       --green-* / --red-*      resolved / errors
+       --on-accent              text that sits on the violet accent
   */
-  --navy-950: #05070d;
-  --page-bg: #0a0e17;
-  --navy-900: #f1f5f9;
-  --navy-800: #2b3852;
-  --navy-700: #384a68;
-  --navy-600: #4b5f7f;
-  --navy-500: #94a3b8;
+  --navy-950: #09090b;
+  --page-bg: #0e0e11;
+  --navy-900: #ffffff;
+  --navy-800: #2b2b33;
+  --navy-700: #3a3a44;
+  --navy-600: #5c5c68;
+  --navy-500: #a6a6b0;
 
-  --blue-500: #6d5ef8;
-  --blue-400: #8b7cfa;
-  --blue-300: #a99dfb;
-  --blue-100: #241f45;
-  --blue-50: #181530;
+  --blue-500: #7b5cff;
+  --blue-400: #9a82ff;
+  --blue-300: #c2b4ff;
+  --blue-100: #2c2456;
+  --blue-50: #1b1734;
 
-  --slate-200: #2a3349;
-  --slate-100: #1b2233;
-  --slate-50: #12182a;
+  --slate-200: #33333c;
+  --slate-100: #25252c;
+  --slate-50: #121215;
 
-  --green-500: #34d399;
-  --green-100: #0e2e24;
-  --green-50: #0a2119;
+  --green-500: #5fdc9a;
+  --green-100: #153626;
+  --green-50: #0f251b;
 
-  --amber-500: #fbbf24;
-  --amber-100: #3a2c0c;
+  --amber-500: #5ec8ff;
+  --amber-100: #11304a;
 
-  --red-500: #f87171;
-  --red-100: #3a181b;
-  --red-50: #2a1013;
+  --red-500: #ff6b6b;
+  --red-100: #43181b;
+  --red-50: #2a1012;
 
-  --white: #131a2b;
+  --white: #17171b;
+  --surface-2: #1f1f25;
   --on-accent: #ffffff;
-  --text-primary: #f1f5f9;
-  --text-secondary: #97a3b8;
-  --text-muted: #64748b;
+  --text-primary: #f4f4f6;
+  --text-secondary: #a8a8b3;
+  --text-muted: #70707c;
 
-  --font-ui: var(--font-inter), -apple-system, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), "Courier New", monospace;
-  --font-serif: var(--font-fraunces), Georgia, serif;
+  /* Marker colours for illustration and accents. */
+  --marker-coral: #ff7a59;
+  --marker-lime: #d4f25a;
+  --marker-pink: #ff5fa8;
+  --marker-sky: #5ec8ff;
+
+  --accent-glow: rgba(123, 92, 255, 0.35);
+  --plum-glow: rgba(123, 92, 255, 0.22);
+
+  --font-ui: var(--font-hanken), -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "Courier New", monospace;
+  --font-display: var(--font-bricolage), var(--font-hanken), sans-serif;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -58,28 +76,36 @@
   --space-10: 40px;
   --space-12: 48px;
   --space-16: 64px;
+  --space-24: 96px;
 
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-2xl: 24px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
   --radius-full: 9999px;
 
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.24);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.32), 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.24);
-  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.4), 0 4px 10px rgba(0, 0, 0, 0.28);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.18);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.5), 0 6px 18px rgba(0, 0, 0, 0.35);
+  --highlight: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 
-  --transition-fast: 100ms ease;
-  --transition-base: 150ms ease;
-  --transition-smooth: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 120ms ease;
+  --transition-base: 180ms ease;
+  --transition-smooth: 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  color-scheme: dark;
 }
 
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+html {
+  background: var(--page-bg);
 }
 
 body {
@@ -90,65 +116,103 @@ body {
   color: var(--text-primary);
   background: var(--page-bg);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--blue-500);
+  color: var(--on-accent);
 }
 
 a {
-  color: var(--blue-500);
+  color: var(--blue-300);
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: var(--blue-300);
+}
+
+:focus-visible {
+  outline: 2px solid var(--blue-400);
+  outline-offset: 2px;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
 
 /* Shared primitives — buttons, inputs, badges, cards reused across the
-   dashboard and marketing pages so every component isn't redeclaring the
-   same button/card chrome. */
+   dashboard and marketing pages. */
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  height: 38px;
+  height: 40px;
   padding: 0 var(--space-5);
   border: 1px solid transparent;
   border-radius: var(--radius-full);
   font-family: var(--font-ui);
   font-size: 14px;
   font-weight: 600;
+  letter-spacing: 0.005em;
   text-decoration: none;
   cursor: pointer;
   transition: background var(--transition-base), border-color var(--transition-base), color var(--transition-base),
-    box-shadow var(--transition-base);
+    box-shadow var(--transition-base), transform var(--transition-fast);
   white-space: nowrap;
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .btn:disabled {
   cursor: default;
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
 .btnPrimary {
-  background: var(--blue-500);
+  background: linear-gradient(180deg, #8d72ff 0%, #6a48f6 100%);
   color: var(--on-accent);
-  box-shadow: var(--shadow-xs);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 1px 2px rgba(0, 0, 0, 0.5),
+    0 8px 24px -8px var(--accent-glow);
 }
 
 .btnPrimary:hover:not(:disabled) {
-  background: var(--blue-400);
+  color: var(--on-accent);
+  background: linear-gradient(180deg, #9c85ff 0%, #7656fb 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32), 0 1px 2px rgba(0, 0, 0, 0.5),
+    0 12px 32px -8px rgba(123, 92, 255, 0.55);
 }
 
 .btnSecondary {
-  background: var(--white);
+  background: var(--surface-2);
   color: var(--text-primary);
   border-color: var(--slate-200);
+  box-shadow: var(--highlight), var(--shadow-xs);
 }
 
 .btnSecondary:hover:not(:disabled) {
-  background: var(--slate-50);
-  border-color: var(--slate-200);
+  color: var(--text-primary);
+  background: #27272e;
+  border-color: #44444f;
 }
 
 .btnGhost {
@@ -167,50 +231,69 @@ a {
   font-size: 13px;
 }
 
+.btnLg {
+  height: 48px;
+  padding: 0 var(--space-6);
+  font-size: 15px;
+}
+
 .input {
-  height: 40px;
+  height: 42px;
   padding: 0 var(--space-4);
   border: 1px solid var(--slate-200);
   border-radius: var(--radius-md);
   font-family: var(--font-ui);
   font-size: 14px;
   color: var(--text-primary);
-  background: var(--white);
+  background: var(--slate-50);
   outline: none;
-  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base), background var(--transition-base);
   width: 100%;
+}
+
+textarea.input {
+  height: auto;
+  padding: var(--space-3) var(--space-4);
+  line-height: 1.5;
+  resize: vertical;
 }
 
 .input::placeholder {
   color: var(--text-muted);
 }
 
+.input:hover {
+  border-color: #44444f;
+}
+
 .input:focus {
-  border-color: var(--blue-400);
-  box-shadow: 0 0 0 3px rgba(109, 94, 248, 0.25);
+  border-color: var(--blue-500);
+  background: #141418;
+  box-shadow: 0 0 0 3px rgba(123, 92, 255, 0.25);
 }
 
 .card {
   background: var(--white);
   border: 1px solid var(--slate-100);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--highlight), var(--shadow-sm);
 }
 
 .badge {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  padding: 2px var(--space-2);
+  padding: 2px 9px;
   border-radius: var(--radius-full);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
 }
 
 .badgeActive {
-  background: var(--green-100);
+  background: var(--green-50);
+  border-color: var(--green-100);
   color: var(--green-500);
 }
 
@@ -225,13 +308,14 @@ a {
 }
 
 .badgePro {
-  background: var(--blue-100);
-  color: var(--blue-500);
+  background: var(--blue-50);
+  border-color: var(--blue-100);
+  color: var(--blue-400);
 }
 
 .badgeAgency {
-  background: var(--navy-800);
-  color: var(--on-accent);
+  background: var(--amber-100);
+  color: var(--amber-500);
 }
 
 .alert {
@@ -245,6 +329,88 @@ a {
   color: var(--red-500);
   font-size: 13px;
   border: 1px solid var(--red-100);
+}
+
+/* Comment pins — the brass marker shape used on every review screen. */
+.pin {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50% 50% 50% 0;
+  transform: translate(-50%, -100%) rotate(-45deg);
+  border: 2px solid #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.pin:hover {
+  transform: translate(-50%, -100%) rotate(-45deg) scale(1.12);
+}
+
+/* The comment composer that opens where a reviewer clicks. */
+.composer {
+  width: 280px;
+  padding: var(--space-3);
+  background: var(--white);
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.composerActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+/* Modal dialogs (reviewer name prompt, comment lists). */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: rgba(6, 6, 8, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.modal {
+  width: 100%;
+  max-width: 360px;
+  padding: var(--space-6);
+  background: var(--white);
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+}
+
+.modalTitle {
+  margin: 0 0 var(--space-1);
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--navy-900);
+}
+
+.modalText {
+  margin: 0 0 var(--space-5);
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
 .visuallyHidden {

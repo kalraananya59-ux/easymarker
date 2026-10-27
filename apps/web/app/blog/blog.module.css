@@ -1,0 +1,336 @@
+.page {
+  min-height: 100vh;
+  background: radial-gradient(60% 520px at 15% 0%, rgba(255, 95, 168, 0.12), transparent 70%), var(--page-bg);
+}
+
+/* ---------- Index ---------- */
+
+.indexMain {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: var(--space-16) var(--space-6) var(--space-24);
+}
+
+.indexHeader {
+  margin-bottom: var(--space-12);
+}
+
+.indexTitle {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-display);
+  font-size: clamp(52px, 8vw, 88px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  color: var(--navy-900);
+}
+
+.indexIntro {
+  max-width: 520px;
+  margin: 0;
+  font-size: 18px;
+  color: var(--text-secondary);
+}
+
+.empty {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-size: 24px;
+  color: var(--text-secondary);
+}
+
+.featured {
+  display: block;
+  padding: var(--space-10);
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-2xl);
+  background: radial-gradient(70% 120% at 100% 0%, rgba(123, 92, 255, 0.12), transparent 60%), var(--white);
+  box-shadow: var(--highlight), var(--shadow-md);
+  text-decoration: none;
+  transition: border-color var(--transition-base), transform var(--transition-base);
+}
+
+.featured:hover {
+  border-color: rgba(123, 92, 255, 0.5);
+}
+
+.featuredMeta {
+  display: block;
+  margin-bottom: var(--space-4);
+  font-size: 13px;
+  color: var(--blue-400);
+}
+
+.featuredTitle {
+  max-width: 720px;
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-display);
+  font-size: clamp(30px, 4vw, 46px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  color: var(--navy-900);
+}
+
+.featuredDesc {
+  max-width: 620px;
+  margin: 0 0 var(--space-6);
+  font-size: 17px;
+  color: var(--text-secondary);
+}
+
+.readMore {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--blue-500);
+}
+
+.list {
+  margin: var(--space-12) 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--slate-100);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: var(--space-6);
+  padding: var(--space-8) 0;
+  border-bottom: 1px solid var(--slate-100);
+  text-decoration: none;
+}
+
+.rowDate {
+  padding-top: 6px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.rowTitle {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--navy-900);
+  transition: color var(--transition-fast);
+}
+
+.row:hover .rowTitle {
+  color: var(--blue-300);
+}
+
+.rowDesc {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 680px) {
+  .featured {
+    padding: var(--space-6);
+  }
+  .row {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+}
+
+/* ---------- Post ---------- */
+
+.postMain {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-12) var(--space-6) var(--space-24);
+}
+
+.back {
+  display: inline-block;
+  margin-bottom: var(--space-8);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.back::before {
+  content: "\2190";
+  margin-right: var(--space-2);
+}
+
+.back:hover {
+  color: var(--text-primary);
+}
+
+.postTitle {
+  margin: 0 0 var(--space-5);
+  font-family: var(--font-display);
+  font-size: clamp(38px, 6vw, 60px);
+  font-weight: 700;
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  color: var(--navy-900);
+}
+
+.postLede {
+  margin: 0 0 var(--space-6);
+  font-size: 20px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.postMeta {
+  margin: 0 0 var(--space-10);
+  padding-bottom: var(--space-8);
+  border-bottom: 1px solid var(--slate-100);
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.prose {
+  font-family: var(--font-ui);
+  font-size: 18.5px;
+  line-height: 1.75;
+  color: #d9d9e0;
+}
+
+.prose p,
+.prose ul,
+.prose ol,
+.prose blockquote,
+.prose pre,
+.prose figure {
+  margin: 0 0 1.3em;
+}
+
+.prose h2,
+.prose h3,
+.prose h4 {
+  margin: 2em 0 0.6em;
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: var(--navy-900);
+}
+
+.prose h2 {
+  font-size: 32px;
+}
+
+.prose h3 {
+  font-size: 25px;
+}
+
+.prose h4 {
+  font-size: 21px;
+}
+
+.prose a {
+  color: var(--blue-300);
+  text-decoration-color: rgba(123, 92, 255, 0.5);
+}
+
+.prose strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.3em;
+}
+
+.prose li {
+  margin-bottom: 0.4em;
+}
+
+.prose li::marker {
+  color: var(--blue-500);
+}
+
+.prose blockquote {
+  padding: 0.2em 0 0.2em 1.1em;
+  border-left: 2px solid var(--blue-500);
+  font-size: 1.1em;
+  color: var(--text-primary);
+}
+
+.prose blockquote p {
+  margin: 0;
+}
+
+.prose code {
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--slate-100);
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+}
+
+.prose pre {
+  overflow-x: auto;
+  padding: var(--space-5);
+  border: 1px solid var(--slate-100);
+  border-radius: var(--radius-lg);
+  background: var(--slate-50);
+  line-height: 1.6;
+}
+
+.prose pre code {
+  padding: 0;
+  background: none;
+  font-size: 14px;
+}
+
+.prose img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--slate-100);
+}
+
+.prose hr {
+  margin: 2.5em 0;
+  border: none;
+  border-top: 1px solid var(--slate-200);
+}
+
+.postCta {
+  margin-top: var(--space-16);
+  padding: var(--space-10);
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-2xl);
+  background: radial-gradient(70% 110% at 50% 100%, rgba(255, 95, 168, 0.21), transparent 70%), var(--white);
+  text-align: center;
+}
+
+.postCta h2 {
+  max-width: 480px;
+  margin: 0 auto var(--space-3);
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--navy-900);
+}
+
+.postCta p {
+  margin: 0 0 var(--space-6);
+  color: var(--text-secondary);
+}
+
+@media (max-width: 600px) {
+  .prose {
+    font-size: 18px;
+  }
+  .postCta {
+    padding: var(--space-8) var(--space-5);
+  }
+}

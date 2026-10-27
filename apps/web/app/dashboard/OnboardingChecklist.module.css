@@ -1,13 +1,18 @@
 .card {
   padding: var(--space-5) var(--space-6);
+  border-radius: var(--radius-xl);
+  border-color: var(--blue-100);
+  background: linear-gradient(100deg, #221b40 0%, var(--white) 60%);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
 }
 
 .heading {
-  font-size: 15px;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--text-primary);
   margin: 0;
 }

@@ -158,12 +158,19 @@ export function ProjectCard({
           <TypeIcon type={type} />
         </div>
         <div className={styles.titleBlock}>
-          <h3 className={styles.title}>{title}</h3>
+          <h3 className={styles.title}>
+            <a href={shareUrl} target="_blank" rel="noreferrer" className={styles.titleLink}>
+              {title}
+            </a>
+          </h3>
           <p className={styles.meta}>
-            {TYPE_LABELS[type] ?? type} · {openCommentCount} open · {new Date(createdAt).toLocaleDateString()}
+            {TYPE_LABELS[type] ?? type}, added{" "}
+            {new Date(createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}
           </p>
         </div>
-        <span className={`badge ${status === "active" ? "badgeActive" : "badgeArchived"}`}>{status}</span>
+        <span className={`${styles.openCount} ${openCommentCount === 0 ? styles.openCountZero : ""}`}>
+          {openCommentCount} open
+        </span>
       </div>
 
       <div className={styles.shareRow}>

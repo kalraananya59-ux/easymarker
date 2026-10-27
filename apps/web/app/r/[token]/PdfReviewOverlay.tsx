@@ -130,7 +130,8 @@ function PdfPage({
                   : c.id === activeCommentId
                     ? "var(--amber-500)"
                     : "var(--blue-500)",
-              border: "none",
+              border: "2px solid #fff",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.45)",
               cursor: "pointer",
             }}
           />
@@ -143,13 +144,9 @@ function PdfPage({
               left: `${pendingPin.xPct * 100}%`,
               top: `${pendingPin.yPct * 100}%`,
               transform: "translate(-50%, -100%)",
-              background: "var(--white)",
-              border: "1px solid var(--slate-200)",
-              borderRadius: 8,
-              padding: 8,
-              width: 240,
               zIndex: 10,
             }}
+            className="composer"
             onClick={(e) => e.stopPropagation()}
           >
             <textarea
@@ -158,14 +155,21 @@ function PdfPage({
               placeholder="Leave feedback…"
               autoFocus
               rows={3}
-              style={{ width: "100%" }}
+              className="input"
             />
-            <button type="button" onClick={onSubmitComment} disabled={submitting || !draftText.trim()}>
-              {submitting ? "Posting…" : "Comment"}
-            </button>
-            <button type="button" onClick={onCancelPending}>
-              Cancel
-            </button>
+            <div className="composerActions">
+              <button type="button" className="btn btnGhost btnSm" onClick={onCancelPending}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btnPrimary btnSm"
+                onClick={onSubmitComment}
+                disabled={submitting || !draftText.trim()}
+              >
+                {submitting ? "Posting…" : "Comment"}
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -325,9 +329,9 @@ export function PdfReviewOverlay({
 
   return (
     <div style={{ position: "fixed", inset: 0, display: "flex" }}>
-      <div style={{ flex: 1, overflowY: "auto", padding: "24px 0", background: "#f1f5f9" }}>
-        {loadError && <p style={{ textAlign: "center", color: "#dc2626" }}>{loadError}</p>}
-        {!pdfDoc && !loadError && <p style={{ textAlign: "center", color: "#64748b" }}>Loading {title}…</p>}
+      <div style={{ flex: 1, overflowY: "auto", padding: "24px 0", background: "var(--slate-50)" }}>
+        {loadError && <p style={{ textAlign: "center", color: "var(--red-500)" }}>{loadError}</p>}
+        {!pdfDoc && !loadError && <p style={{ textAlign: "center", color: "var(--text-muted)" }}>Loading {title}…</p>}
         {pdfDoc && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
             {Array.from({ length: pdfDoc.numPages }, (_, i) => i + 1).map((pageNumber) => (
@@ -355,7 +359,7 @@ export function PdfReviewOverlay({
         )}
       </div>
 
-      <div style={{ width: 340, borderLeft: "1px solid var(--slate-200)", overflowY: "auto" }}>
+      <div style={{ width: 340, borderLeft: "1px solid var(--slate-100)", overflowY: "auto", background: "var(--white)" }}>
         <CommentSidebar
           comments={comments}
           activeCommentId={activeCommentId}

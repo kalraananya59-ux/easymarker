@@ -158,7 +158,8 @@ export function ReviewOverlay({
                   : c.id === activeCommentId
                     ? "var(--amber-500)"
                     : "var(--blue-500)",
-              border: "none",
+              border: "2px solid #fff",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.45)",
               cursor: "pointer",
             }}
           />
@@ -166,16 +167,13 @@ export function ReviewOverlay({
 
         {pendingPin && (
           <div
+            className="composer"
             style={{
               position: "absolute",
               left: `${pendingPin.xPct * 100}%`,
               top: `${pendingPin.yPct * 100}%`,
               transform: "translate(-50%, -100%)",
-              background: "var(--white)",
-              border: "1px solid var(--slate-200)",
-              borderRadius: 8,
-              padding: 8,
-              width: 240,
+              zIndex: 10,
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -185,19 +183,26 @@ export function ReviewOverlay({
               placeholder="Leave feedback…"
               autoFocus
               rows={3}
-              style={{ width: "100%" }}
+              className="input"
             />
-            <button type="button" onClick={submitComment} disabled={submitting || !draftText.trim()}>
-              {submitting ? "Posting…" : "Comment"}
-            </button>
-            <button type="button" onClick={() => setPendingPin(null)}>
-              Cancel
-            </button>
+            <div className="composerActions">
+              <button type="button" className="btn btnGhost btnSm" onClick={() => setPendingPin(null)}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btnPrimary btnSm"
+                onClick={submitComment}
+                disabled={submitting || !draftText.trim()}
+              >
+                {submitting ? "Posting…" : "Comment"}
+              </button>
+            </div>
           </div>
         )}
       </div>
 
-      <div style={{ width: 340, borderLeft: "1px solid var(--slate-200)", overflowY: "auto" }}>
+      <div style={{ width: 340, borderLeft: "1px solid var(--slate-100)", overflowY: "auto", background: "var(--white)" }}>
         <CommentSidebar
           comments={comments}
           activeCommentId={activeCommentId}

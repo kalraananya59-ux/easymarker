@@ -28,7 +28,7 @@ export default async function SettingsPage() {
 
   return (
     <div className={styles.page}>
-      <AppHeader title="Settings" />
+      <AppHeader title="Settings" description="Your plan, billing and API access." />
       <div className={styles.content}>
         <BillingSection plan={workspace?.plan ?? "free"} />
         <ApiKeyGenerator />

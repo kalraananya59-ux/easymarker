@@ -1,12 +1,12 @@
 .page {
   min-height: 100vh;
-  background: var(--slate-50);
+  background: radial-gradient(60% 420px at 15% 0%, rgba(255, 95, 168, 0.096), transparent 70%), var(--page-bg);
 }
 
 .content {
-  max-width: 1080px;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: var(--space-8);
+  padding: var(--space-8) var(--space-6) var(--space-16);
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
@@ -22,17 +22,23 @@
   .createGrid {
     grid-template-columns: 1fr;
   }
+  .content {
+    padding: var(--space-6) var(--space-4) var(--space-12);
+  }
 }
 
 .createCard {
   padding: var(--space-6);
+  border-radius: var(--radius-xl);
 }
 
 .createCard h2 {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary);
   margin: 0 0 var(--space-4);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--navy-900);
 }
 
 .listHeader {
@@ -41,31 +47,31 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--space-3);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
+  padding-top: var(--space-2);
 }
 
 .sectionTitle {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 .filters {
   display: flex;
   gap: 2px;
-  background: var(--slate-100);
-  border-radius: var(--radius-md);
-  padding: 2px;
+  padding: 3px;
+  border: 1px solid var(--slate-100);
+  border-radius: var(--radius-full);
+  background: var(--slate-50);
 }
 
 .filterLink {
-  padding: 6px var(--space-3);
-  border-radius: 6px;
+  padding: 5px var(--space-4);
+  border-radius: var(--radius-full);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-secondary);
   text-decoration: none;
   transition: background var(--transition-fast), color var(--transition-fast);
@@ -76,14 +82,14 @@
 }
 
 .filterLinkActive {
-  background: var(--white);
+  background: var(--surface-2);
   color: var(--text-primary);
-  box-shadow: var(--shadow-xs);
+  box-shadow: var(--highlight), var(--shadow-xs);
 }
 
 .projectGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: var(--space-5);
 }
 
@@ -91,12 +97,21 @@
   padding: var(--space-16) var(--space-6);
   text-align: center;
   border: 1px dashed var(--slate-200);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   background: var(--white);
 }
 
 .emptyState p {
-  color: var(--text-secondary);
-  font-size: 14px;
   margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-size: 22px;
+  color: var(--text-secondary);
+}
+
+.createHint {
+  margin: var(--space-4) 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
 }
