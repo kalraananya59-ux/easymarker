@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 import type { AnchorPayload } from "@easymarker/shared";
 import { NamePrompt } from "./NamePrompt";
+import { SnapshotModal } from "./SnapshotModal";
+import { useCommentSnapshot } from "./useCommentSnapshot";
+import { sharedCommentIdFromUrl, type PageCapture } from "./snapshot";
 import { CommentSidebar } from "./CommentSidebar";
 import { readGuestIdentity, writeGuestIdentity, type GuestIdentity } from "@/lib/guest-client";
 import type { CommentData } from "./types";
@@ -116,6 +119,7 @@ function PdfPage({
               e.stopPropagation();
               onSelectPin(c.id);
             }}
+            className={c.id === activeCommentId ? "pinActive" : undefined}
             style={{
               position: "absolute",
               left: `${c.positionX * 100}%`,
@@ -201,6 +205,49 @@ export function PdfReviewOverlay({
   const [guestIdentity, setGuestIdentity] = useState<GuestIdentity | null>(null);
 
   const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  // A comment opened through a shared link (?c=<id>), scrolled to once its page has rendered.
+  const pendingDeepLink = useRef<string | null>(null);
+
+  useEffect(() => {
+    const shared = sharedCommentIdFromUrl();
+    if (shared && initialComments.some((c) => c.id === shared)) {
+      pendingDeepLink.current = shared;
+      setActiveCommentId(shared);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!pdfDoc || !pendingDeepLink.current) return;
+    const id = pendingDeepLink.current;
+    // Pages render asynchronously; give them a moment to get their size.
+    const timer = window.setTimeout(() => {
+      pendingDeepLink.current = null;
+      selectComment(id);
+    }, 600);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pdfDoc]);
+
+  const captureComment = useCallback(async (comment: CommentWithAnchor): Promise<PageCapture | null> => {
+    const page = comment.anchor?.page;
+    if (page === undefined) return null;
+    const canvas = pageRefs.current.get(page)?.querySelector("canvas");
+    if (!canvas || canvas.width === 0) return null;
+    return {
+      source: canvas,
+      sourceWidth: canvas.width,
+      sourceHeight: canvas.height,
+      pinX: comment.positionX * canvas.width,
+      pinY: comment.positionY * canvas.height,
+    };
+  }, []);
+
+  const { snapshot, takeScreenshot, closeSnapshot } = useCommentSnapshot({
+    comments,
+    title,
+    capture: captureComment,
+  });
 
   useEffect(() => {
     if (!isOwner) setGuestIdentity(readGuestIdentity());
@@ -364,6 +411,7 @@ export function PdfReviewOverlay({
           comments={comments}
           activeCommentId={activeCommentId}
           onSelectComment={selectComment}
+          onScreenshot={takeScreenshot}
           isOwner={isOwner}
           onReply={handleReply}
           onStatusChange={handleStatusChange}
@@ -371,6 +419,8 @@ export function PdfReviewOverlay({
           onEditIdentity={() => setShowNamePrompt(true)}
         />
       </div>
+
+      {snapshot && <SnapshotModal state={snapshot} onClose={closeSnapshot} />}
 
       {showNamePrompt && (
         <NamePrompt

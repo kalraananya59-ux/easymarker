@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { NamePrompt } from "./NamePrompt";
 import { CommentSidebar } from "./CommentSidebar";
+import { SnapshotModal } from "./SnapshotModal";
+import { useCommentSnapshot } from "./useCommentSnapshot";
+import { loadImageForCanvas, sharedCommentIdFromUrl, type PageCapture } from "./snapshot";
 import { readGuestIdentity, writeGuestIdentity, type GuestIdentity } from "@/lib/guest-client";
 import type { CommentData } from "./types";
 
@@ -25,6 +28,7 @@ export function ReviewOverlay({
   initialComments: CommentData[];
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   const [comments, setComments] = useState<CommentData[]>(initialComments);
   const [pendingPin, setPendingPin] = useState<PendingPin | null>(null);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
@@ -36,6 +40,55 @@ export function ReviewOverlay({
   useEffect(() => {
     if (!isOwner) setGuestIdentity(readGuestIdentity());
   }, [isOwner]);
+
+  // Opened through a shared comment link (?c=<id>).
+  useEffect(() => {
+    const shared = sharedCommentIdFromUrl();
+    if (shared && initialComments.some((c) => c.id === shared)) setActiveCommentId(shared);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const captureComment = useCallback(
+    async (comment: CommentData): Promise<PageCapture | null> => {
+      const container = containerRef.current;
+      const shown = imgRef.current;
+      if (!container || !shown) return null;
+      const img = await loadImageForCanvas(imageSrc);
+      if (!img) return null;
+      // Pins are stored relative to the review area, so map that point onto
+      // the image's own pixels.
+      const area = container.getBoundingClientRect();
+      const box = shown.getBoundingClientRect();
+      const pointX = area.left + comment.positionX * area.width;
+      const pointY = area.top + comment.positionY * area.height;
+      const scale = img.naturalWidth / box.width;
+      // Make sure the image can actually be exported (some file hosts block it).
+      const probe = document.createElement("canvas");
+      probe.width = 1;
+      probe.height = 1;
+      const ctx = probe.getContext("2d");
+      try {
+        ctx?.drawImage(img, 0, 0, 1, 1);
+        probe.toDataURL();
+      } catch {
+        return null;
+      }
+      return {
+        source: img,
+        sourceWidth: img.naturalWidth,
+        sourceHeight: img.naturalHeight,
+        pinX: Math.max(0, Math.min(img.naturalWidth, (pointX - box.left) * scale)),
+        pinY: Math.max(0, Math.min(img.naturalHeight, (pointY - box.top) * scale)),
+      };
+    },
+    [imageSrc]
+  );
+
+  const { snapshot, takeScreenshot, closeSnapshot } = useCommentSnapshot({
+    comments,
+    title: imageAlt,
+    capture: captureComment,
+  });
 
   function saveGuestIdentity(name: string, email: string) {
     const identity: GuestIdentity = email ? { name, email } : { name };
@@ -132,7 +185,7 @@ export function ReviewOverlay({
         style={{ position: "relative", flex: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "crosshair", overflow: "auto" }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={imageSrc} alt={imageAlt} style={{ maxWidth: "100%", maxHeight: "100%" }} draggable={false} />
+        <img ref={imgRef} src={imageSrc} alt={imageAlt} style={{ maxWidth: "100%", maxHeight: "100%" }} draggable={false} />
 
         {comments.map((c) => (
           <button
@@ -144,6 +197,7 @@ export function ReviewOverlay({
               setActiveCommentId(c.id);
               setPendingPin(null);
             }}
+            className={c.id === activeCommentId ? "pinActive" : undefined}
             style={{
               position: "absolute",
               left: `${c.positionX * 100}%`,
@@ -207,6 +261,7 @@ export function ReviewOverlay({
           comments={comments}
           activeCommentId={activeCommentId}
           onSelectComment={setActiveCommentId}
+          onScreenshot={takeScreenshot}
           isOwner={isOwner}
           onReply={handleReply}
           onStatusChange={handleStatusChange}
@@ -214,6 +269,8 @@ export function ReviewOverlay({
           onEditIdentity={() => setShowNamePrompt(true)}
         />
       </div>
+
+      {snapshot && <SnapshotModal state={snapshot} onClose={closeSnapshot} />}
 
       {showNamePrompt && (
         <NamePrompt

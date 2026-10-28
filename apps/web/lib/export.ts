@@ -21,7 +21,11 @@ const CSV_HEADERS = [
   "Page",
   "Created At",
   "Resolved At",
+  "Link to Comment",
 ];
+
+// Builds the link that opens the review page focused on one comment.
+export type CommentLinkBuilder = (commentId: string) => string;
 
 function anchorPage(anchor: unknown): string {
   if (anchor && typeof anchor === "object" && "page" in anchor) {
@@ -31,7 +35,7 @@ function anchorPage(anchor: unknown): string {
   return "";
 }
 
-export function buildCommentsCsv(rows: Comment[]): string {
+export function buildCommentsCsv(rows: Comment[], commentLink?: CommentLinkBuilder): string {
   const lines = [CSV_HEADERS.join(",")];
 
   for (const c of rows) {
@@ -46,6 +50,7 @@ export function buildCommentsCsv(rows: Comment[]): string {
       anchorPage(c.anchor),
       c.createdAt.toISOString(),
       c.resolvedAt ? c.resolvedAt.toISOString() : "",
+      commentLink ? commentLink(c.id) : "",
     ];
     lines.push(fields.map((f) => csvEscape(String(f))).join(","));
   }
@@ -53,7 +58,11 @@ export function buildCommentsCsv(rows: Comment[]): string {
   return lines.join("\r\n");
 }
 
-export function buildCommentsPdf(rows: Comment[], projectTitle: string): Promise<Buffer> {
+export function buildCommentsPdf(
+  rows: Comment[],
+  projectTitle: string,
+  commentLink?: CommentLinkBuilder
+): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 40, size: "A4" });
     const chunks: Buffer[] = [];
@@ -84,6 +93,11 @@ export function buildCommentsPdf(rows: Comment[], projectTitle: string): Promise
       );
       doc.moveDown(0.3);
       doc.fontSize(11).fillColor("#000000").text(c.body);
+      if (commentLink) {
+        const link = commentLink(c.id);
+        doc.moveDown(0.3);
+        doc.fontSize(9).fillColor("#7b5cff").text("Open this comment on the page", { link, underline: true });
+      }
       doc.moveDown();
       doc
         .strokeColor("#e2e8f0")

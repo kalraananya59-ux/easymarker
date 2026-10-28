@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { NamePrompt } from "./NamePrompt";
 import { CommentSidebar } from "./CommentSidebar";
+import { SnapshotModal } from "./SnapshotModal";
+import { useCommentSnapshot } from "./useCommentSnapshot";
+import { sharedCommentIdFromUrl, type PageCapture } from "./snapshot";
 import { readGuestIdentity, writeGuestIdentity, type GuestIdentity } from "@/lib/guest-client";
 import type { CommentData } from "./types";
 
@@ -60,6 +63,77 @@ export function UrlReviewOverlay({
   const [guestIdentity, setGuestIdentity] = useState<GuestIdentity | null>(null);
 
   const handshakeAcked = useRef(false);
+  // A comment opened through a shared link (?c=<id>) that still needs to be
+  // scrolled into view inside the site once the frame is ready.
+  const pendingDeepLink = useRef<string | null>(null);
+  const captureWaiters = useRef(
+    new Map<string, (result: { blob: Blob | null; pinX: number | null; pinY: number | null; width: number; height: number }) => void>()
+  );
+
+  useEffect(() => {
+    const shared = sharedCommentIdFromUrl();
+    if (shared && initialComments.some((c) => c.id === shared)) {
+      pendingDeepLink.current = shared;
+      setActiveCommentId(shared);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function scrollToComment(id: string) {
+    const comment = comments.find((c) => c.id === id);
+    if (!comment) return;
+    iframeRef.current?.contentWindow?.postMessage(
+      { type: "easymarker:scroll-to-anchor", anchor: comment.anchor },
+      proxyOrigin
+    );
+  }
+
+  function selectComment(id: string) {
+    setActiveCommentId(id);
+    scrollToComment(id);
+  }
+
+  const captureComment = useCallback(
+    async (comment: CommentWithAnchor): Promise<PageCapture | null> => {
+      const frame = iframeRef.current?.contentWindow;
+      if (!frame) return null;
+      const requestId = `${comment.id}-${Date.now()}`;
+      const result = await new Promise<{
+        blob: Blob | null;
+        pinX: number | null;
+        pinY: number | null;
+        width: number;
+        height: number;
+      } | null>((resolve) => {
+        const timer = window.setTimeout(() => {
+          captureWaiters.current.delete(requestId);
+          resolve(null);
+        }, 20000);
+        captureWaiters.current.set(requestId, (r) => {
+          window.clearTimeout(timer);
+          resolve(r);
+        });
+        frame.postMessage({ type: "easymarker:capture", requestId, anchor: comment.anchor }, proxyOrigin);
+      });
+      if (!result?.blob || result.pinX === null || result.pinY === null) return null;
+      const bitmap = await createImageBitmap(result.blob);
+      const ratio = bitmap.width / result.width;
+      return {
+        source: bitmap,
+        sourceWidth: bitmap.width,
+        sourceHeight: bitmap.height,
+        pinX: result.pinX * ratio,
+        pinY: result.pinY * ratio,
+      };
+    },
+    [proxyOrigin]
+  );
+
+  const { snapshot, takeScreenshot, closeSnapshot } = useCommentSnapshot({
+    comments,
+    title,
+    capture: captureComment,
+  });
 
   useEffect(() => {
     if (!isOwner) setGuestIdentity(readGuestIdentity());
@@ -125,8 +199,36 @@ export function UrlReviewOverlay({
         return;
       }
 
+      if (data.type === "easymarker:capture-result") {
+        const result = e.data as {
+          requestId: string;
+          blob: Blob | null;
+          pinX?: number | null;
+          pinY?: number | null;
+          width?: number;
+          height?: number;
+        };
+        const waiter = captureWaiters.current.get(result.requestId);
+        if (waiter) {
+          captureWaiters.current.delete(result.requestId);
+          waiter({
+            blob: result.blob,
+            pinX: result.pinX ?? null,
+            pinY: result.pinY ?? null,
+            width: result.width ?? 0,
+            height: result.height ?? 0,
+          });
+        }
+        return;
+      }
+
       if (data.type === "easymarker:anchor-positions") {
         handshakeAcked.current = true;
+        if (pendingDeepLink.current) {
+          const id = pendingDeepLink.current;
+          pendingDeepLink.current = null;
+          scrollToComment(id);
+        }
         const { positions } = e.data as {
           positions: Array<{ id: string; position: { x: number; y: number; confidence: number } | null }>;
         };
@@ -247,6 +349,7 @@ export function UrlReviewOverlay({
               type="button"
               aria-label={`Comment by ${comment.reviewerName}`}
               onClick={() => setActiveCommentId(pin.id)}
+              className={pin.id === activeCommentId ? "pinActive" : undefined}
               title={pin.confidence < 0.7 ? "Position may have shifted" : undefined}
               style={{
                 position: "fixed",
@@ -310,7 +413,8 @@ export function UrlReviewOverlay({
         <CommentSidebar
           comments={comments}
           activeCommentId={activeCommentId}
-          onSelectComment={setActiveCommentId}
+          onSelectComment={selectComment}
+          onScreenshot={takeScreenshot}
           isOwner={isOwner}
           onReply={handleReply}
           onStatusChange={handleStatusChange}
@@ -318,6 +422,8 @@ export function UrlReviewOverlay({
           onEditIdentity={() => setShowNamePrompt(true)}
         />
       </div>
+
+      {snapshot && <SnapshotModal state={snapshot} onClose={closeSnapshot} />}
 
       {showNamePrompt && (
         <NamePrompt

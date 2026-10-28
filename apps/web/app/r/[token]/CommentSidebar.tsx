@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CommentData, ReplyData, StatusChangeData } from "./types";
 import type { GuestIdentity } from "@/lib/guest-client";
+import { commentShareUrl } from "./snapshot";
 import styles from "./CommentSidebar.module.css";
 
 type TimelineItem = ({ kind: "reply" } & ReplyData) | ({ kind: "status" } & StatusChangeData);
@@ -61,6 +62,33 @@ interface CommentSidebarProps {
   onStatusChange: (commentId: string, status: CommentData["status"]) => Promise<void>;
   guestIdentity?: GuestIdentity | null;
   onEditIdentity?: () => void;
+  onScreenshot?: (commentId: string) => void;
+}
+
+function LinkIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+      <path d="M10 13a5 5 0 007.07 0l3-3a5 5 0 00-7.07-7.07l-1.5 1.5" strokeLinecap="round" />
+      <path d="M14 11a5 5 0 00-7.07 0l-3 3a5 5 0 007.07 7.07l1.5-1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function CameraIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+      <path d="M4 8h3l2-3h6l2 3h3v11H4z" strokeLinejoin="round" />
+      <circle cx="12" cy="13" r="3.5" />
+    </svg>
+  );
+}
+
+function DownloadIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+      <path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 20h14" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
 }
 
 export function CommentSidebar({
@@ -72,9 +100,55 @@ export function CommentSidebar({
   onStatusChange,
   guestIdentity,
   onEditIdentity,
+  onScreenshot,
 }: CommentSidebarProps) {
   const [showResolved, setShowResolved] = useState(false);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [reviewPath, setReviewPath] = useState("");
+  const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  useEffect(() => {
+    setReviewPath(window.location.pathname.replace(/\/$/, ""));
+  }, []);
+
+  const exportRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!exportOpen) return;
+    function close(e: MouseEvent | KeyboardEvent) {
+      if (e instanceof KeyboardEvent ? e.key === "Escape" : !exportRef.current?.contains(e.target as Node)) {
+        setExportOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", close);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", close);
+    };
+  }, [exportOpen]);
+
+  // Keep the selected comment visible in the list (e.g. when a shared link
+  // opens the page, or a pin is clicked).
+  useEffect(() => {
+    if (!activeCommentId) return;
+    const active = comments.find((c) => c.id === activeCommentId);
+    if (active?.status === "resolved") setShowResolved(true);
+    const el = itemRefs.current.get(activeCommentId);
+    el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [activeCommentId, comments]);
+
+  async function copyCommentLink(commentId: string) {
+    const url = commentShareUrl(commentId);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedId(commentId);
+      window.setTimeout(() => setCopiedId((id) => (id === commentId ? null : id)), 2000);
+    } catch {
+      window.prompt("Copy this link:", url);
+    }
+  }
 
   const visible = comments.filter((c) => showResolved || c.status !== "resolved");
 
@@ -91,10 +165,37 @@ export function CommentSidebar({
         <span className={styles.count}>
           {comments.length} comment{comments.length === 1 ? "" : "s"}
         </span>
-        <label className={styles.showResolved}>
-          <input type="checkbox" checked={showResolved} onChange={(e) => setShowResolved(e.target.checked)} />
-          Show resolved
-        </label>
+        <div className={styles.headerActions}>
+          <label className={styles.showResolved}>
+            <input type="checkbox" checked={showResolved} onChange={(e) => setShowResolved(e.target.checked)} />
+            Show resolved
+          </label>
+          {comments.length > 0 && reviewPath && (
+            <div className={styles.exportWrap} ref={exportRef}>
+              <button
+                type="button"
+                className={styles.exportButton}
+                aria-expanded={exportOpen}
+                onClick={() => setExportOpen((v) => !v)}
+              >
+                <DownloadIcon />
+                Export
+              </button>
+              {exportOpen && (
+                <div className={styles.exportMenu} role="menu">
+                  <a role="menuitem" href={`${reviewPath}/export?format=csv`} onClick={() => setExportOpen(false)}>
+                    <strong>CSV</strong>
+                    <span>For Excel or Google Sheets</span>
+                  </a>
+                  <a role="menuitem" href={`${reviewPath}/export?format=pdf`} onClick={() => setExportOpen(false)}>
+                    <strong>PDF</strong>
+                    <span>A tidy report to send or print</span>
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {!isOwner && guestIdentity && onEditIdentity && (
@@ -114,6 +215,10 @@ export function CommentSidebar({
         {visible.map((comment) => (
           <div
             key={comment.id}
+            ref={(el) => {
+              if (el) itemRefs.current.set(comment.id, el);
+              else itemRefs.current.delete(comment.id);
+            }}
             className={`${styles.commentItem} ${comment.id === activeCommentId ? styles.commentItemActive : ""}`}
             onClick={() => onSelectComment(comment.id)}
           >
@@ -125,6 +230,26 @@ export function CommentSidebar({
             <p className={`${styles.body} ${comment.status === "resolved" ? styles.bodyResolved : ""}`}>
               {urlify(comment.body)}
             </p>
+
+            <div className={styles.shareRow} onClick={(e) => e.stopPropagation()}>
+              <button type="button" className={styles.shareButton} onClick={() => copyCommentLink(comment.id)}>
+                <LinkIcon />
+                {copiedId === comment.id ? "Link copied!" : "Copy link"}
+              </button>
+              {onScreenshot && (
+                <button
+                  type="button"
+                  className={styles.shareButton}
+                  onClick={() => {
+                    onSelectComment(comment.id);
+                    onScreenshot(comment.id);
+                  }}
+                >
+                  <CameraIcon />
+                  Screenshot
+                </button>
+              )}
+            </div>
 
             {isOwner && (
               <div className={styles.statusPicker}>

@@ -33,9 +33,11 @@ export async function GET(request: Request, { params }: { params: { id: string }
     .orderBy(comments.createdAt);
 
   const safeTitle = project.title.replace(/[^a-z0-9-]+/gi, "-").toLowerCase();
+  const origin = new URL(request.url).origin;
+  const commentLink = (commentId: string) => `${origin}/r/${project.shareToken}?c=${commentId}`;
 
   if (format === "csv") {
-    const csv = buildCommentsCsv(rows);
+    const csv = buildCommentsCsv(rows, commentLink);
     return new NextResponse(csv, {
       status: 200,
       headers: {
@@ -45,7 +47,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     });
   }
 
-  const pdf = await buildCommentsPdf(rows, project.title);
+  const pdf = await buildCommentsPdf(rows, project.title, commentLink);
   return new NextResponse(new Uint8Array(pdf), {
     status: 200,
     headers: {
